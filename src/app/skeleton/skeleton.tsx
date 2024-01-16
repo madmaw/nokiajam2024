@@ -8,11 +8,11 @@ import {
   screenHeight,
   screenWidth,
 } from 'base/metrics';
+import type Color from 'colorjs.io';
 import {
   type PropsWithChildren,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -81,6 +81,16 @@ const Spacer = styled.div`
 
 `;
 
+const Container = styled.div<{ background: Color, scale: number }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: ${({ scale }) => `scale(${scale})`};
+  background-color: ${({ background }) => background.toString({ format: 'hex' })};
+`;
+
 export function Skeleton({
   children,
   foreground,
@@ -93,20 +103,6 @@ export function Skeleton({
     scale,
     setScale,
   ] = useState<number>(1);
-  const Container = useMemo(function () {
-    return styled.div`
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      transform: scale(${scale});
-      background-color: ${background.toString({ format: 'hex' })};
-    `;
-  }, [
-    background,
-    scale,
-  ]);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const maybeFirePixelDimensionChange = useCallback(function () {
@@ -158,6 +154,8 @@ export function Skeleton({
       </svg>
       <Container
         ref={contentRef}
+        background={background}
+        scale={scale}
       >
         <Spacer>
           <Content >

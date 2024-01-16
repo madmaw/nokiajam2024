@@ -3,6 +3,6 @@ import { type ColorScheme } from 'ui/color_scheme';
 
 export const blackAndWhite: ColorScheme = {
   name: 'Black & White',
-  background: new Color('#000000'),
-  foreground: new Color('#ffffff'),
+  background: new Color('#ffffff'),
+  foreground: new Color('#000000'),
 };

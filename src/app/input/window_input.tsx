@@ -42,6 +42,9 @@ const KeyActions: Record<string, InputRules | undefined> = {
   'Enter': {
     action: InputAction.Select,
   },
+  'Escape': {
+    action: InputAction.Back,
+  },
 };
 
 export function WindowInput({
@@ -110,7 +113,7 @@ export function WindowInput({
       deltaY,
     } = e;
     const delta = Math.round(deltaY / 100);
-    new Array(Math.abs(delta)).fill(0).forEach(function (_, i) {
+    new Array(Math.abs(delta)).fill(0).forEach(function () {
       input.next({
         action: delta > 0 ? InputAction.Down : InputAction.Up,
         progress: InputProgress.Commit,

@@ -23,7 +23,6 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.23.7",
-    "@babel/plugin-transform-class-properties": "^7.23.3",
     "@types/react-dom": "^18.2.18",
     "@types/string-format": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "^6.17.0",

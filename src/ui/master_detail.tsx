@@ -22,6 +22,7 @@ const MasterContainer = styled.div`
 
 const DetailContainer = styled.div`
   flex: 1;
+  min-height: 0;
 `;
 
 export function MasterDetail({

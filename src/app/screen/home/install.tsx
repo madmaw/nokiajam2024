@@ -7,8 +7,8 @@ import {
   type ComponentType,
   type PropsWithChildren,
 } from 'react';
+import { type MaybeWithInput } from 'ui/input';
 import { MasterDetail } from 'ui/master_detail';
-import { type ScreenProps } from 'ui/screen/screen';
 
 const items: TextMenuItem[] = [
   {
@@ -42,15 +42,17 @@ export function install({
     };
   });
 
-  function Home({
+  function HomeScreen({
     input,
-  }: ScreenProps) {
+    output,
+  }: MaybeWithInput) {
     return (
       <MasterDetail
         Heading={Heading}
       >
         <TextMenu
           input={input}
+          output={output}
           items={items}
           activateItem={activateItem}
         />
@@ -59,6 +61,6 @@ export function install({
   }
 
   return {
-    Home,
+    HomeScreen,
   };
 }

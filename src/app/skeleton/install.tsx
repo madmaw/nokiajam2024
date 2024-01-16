@@ -10,10 +10,17 @@ export function install({
 }: {
   readonly settings: Settings,
 }) {
+
   const SkeletonWithTheme = createPartialObserverComponent(
     Skeleton,
     function () {
-      return settings.colorScheme;
+      const {
+        foreground, background, 
+      } = settings;
+      return {
+        foreground,
+        background,
+      };
     },
   );
   const contentHolder = new ContentHolder();

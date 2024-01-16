@@ -1,15 +1,19 @@
-import { observer } from 'mobx-react';
 import { Settings } from 'model/settings';
 
 import { install as installColorSchemes } from './color_schemes/install';
 import { install as installFonts } from './fonts/install';
-import { install as installHome } from './home/install';
 import { install as installInput } from './input/install';
+import { install as installHome } from './screen/home/install';
+import { install as installSettings } from './screen/settings/install';
+import { install as installTheme } from './screen/settings/theme/install';
 import { install as installSkeleton } from './skeleton/install';
 import { install as installUi } from './ui/install';
 
 export function install() {
-  const { defaultColorScheme } = installColorSchemes();
+  const {
+    defaultColorScheme,
+    colorSchemes,
+  } = installColorSchemes();
   const {
     FontLoader,
     fonts,
@@ -23,7 +27,9 @@ export function install() {
   const {
     Skeleton,
     contentHolder,
-  } = installSkeleton({ settings });
+  } = installSkeleton({
+    settings,
+  });
   const {
     Button,
     Text,
@@ -32,18 +38,42 @@ export function install() {
     settings,
   });
 
-  const { Home } = installHome({
+  const { ThemeScreen } = installTheme({
+    TitleText: Text,
+    TextMenu,
+    colorSchemes,
+    settings,
+  });
+
+  const { SettingsScreen } = installSettings({
+    TitleText: Text,
+    TextMenu,
+  });
+
+  const { HomeScreen } = installHome({
     TitleText: Text,
     TextMenu,
   });
 
   contentHolder.Content = function () {
     return (
-      <Home input={input}/>
+      <HomeScreen
+        input={input}
+        output={undefined}
+      />
     );
   };
 
-  return observer(function () {
+  contentHolder.Content = function () {
+    return (
+      <ThemeScreen
+        input={input}
+        output={undefined}
+      />
+    );
+  };
+
+  return function () {
     return (
       <>
         <InputInstaller/>
@@ -51,5 +81,5 @@ export function install() {
         <Skeleton/>
       </>
     );
-  });
+  };
 }

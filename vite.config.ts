@@ -9,8 +9,12 @@ export default defineConfig({
       babel: {
         plugins: [
           'macros',
-          '@babel/plugin-transform-class-properties',
-          ['@babel/plugin-proposal-decorators', { decoratorsBeforeExport: true }],
+          [
+            '@babel/plugin-proposal-decorators',
+            {
+              'version': '2023-05',
+            },
+          ],
         ],
       },
     }),

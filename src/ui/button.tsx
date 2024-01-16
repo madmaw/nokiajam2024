@@ -13,9 +13,11 @@ import {
 } from 'react';
 
 import {
+  type Input,
   InputAction,
   InputProgress,
   type MaybeWithInput,
+  useInput,
 } from './input';
 
 export type ButtonProps = MaybeWithInput<{
@@ -41,12 +43,12 @@ const UnstyledButton = styled.button<{
   overflow: hidden;
   text-size-adjust: none;
   text-align: start;
-    > * {
-      transform: ${({ active }) => active ? `translateY(${npx})` : 'none'};
-    }
-    background-color: ${({ selected }) => selected ? fill.toString({ format: 'hex' }) : 'transparent'};
-    color: ${({ selected }) => selected ? transparency.toString({ format: 'hex' }) : 'inherit'};
-    width: ${({ stretch }) => stretch ? '100%' : 'auto'};
+  background-color: ${({ selected }) => selected ? fill.toString({ format: 'hex' }) : 'transparent'};
+  color: ${({ selected }) => selected ? transparency.toString({ format: 'hex' }) : 'inherit'};
+  width: ${({ stretch }) => stretch ? '100%' : 'auto'};
+  > * {
+    transform: ${({ active }) => active ? `translateY(${npx})` : 'none'};
+  }
 `;
 
 export function Button({
@@ -54,6 +56,7 @@ export function Button({
   Text,
   stretch = false,
   input,
+  output,
   onClick,
   selected = false,
   onSelected,
@@ -66,27 +69,23 @@ export function Button({
 
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
-  useEffect(function () {
-    if (input == null) {
-      return;
+  const inputHandler = useCallback(function ({
+    action, progress,
+  }: Input) {
+    switch (action) {
+      case InputAction.Select:
+        setActive(progress === InputProgress.Start);
+        if (progress === InputProgress.Commit) {
+          buttonRef.current?.click();
+          return true;
+        }
+        return;
+      default:
+        return;
     }
-    const subscription = input.subscribe(function ({
-      action,
-      progress,
-    }) {
-      switch (action) {
-        case InputAction.Select:
-          setActive(progress === InputProgress.Start);
-          if (progress === InputProgress.Commit) {
-            buttonRef.current?.click();
-          }
-          break;
-        default:
-          break;
-      }
-    });
-    return subscription.unsubscribe.bind(subscription);
-  }, [input]);
+  }, []);
+
+  useInput(input, output, inputHandler);
 
   const maybeOnSelected = useCallback(function () {
     if (onSelected && !selected) {

@@ -4,10 +4,25 @@ import { type FontFamily } from 'ui/font';
 
 export class Settings {
   @observable.ref
-    colorScheme: ColorScheme;
+  accessor colorScheme: ColorScheme;
 
   @observable.ref
-    body: FontFamily;
+  accessor invertColorScheme: boolean = false;
+
+  @observable.ref
+  accessor body: FontFamily;
+
+  get foreground() {
+    return this.invertColorScheme
+      ? this.colorScheme.background
+      : this.colorScheme.foreground;
+  }
+
+  get background() {
+    return this.invertColorScheme
+      ? this.colorScheme.foreground
+      : this.colorScheme.background;
+  }
 
   constructor(
     colorScheme: ColorScheme,

@@ -9,9 +9,11 @@ import {
   useState,
 } from 'react';
 import {
+  type Input,
   InputAction,
   InputProgress,
   type MaybeWithInput,
+  useOutput,
 } from 'ui/input';
 
 import { VerticalScrollbar } from './scrollbar';
@@ -60,6 +62,7 @@ export type MenuProps<T> = MaybeWithInput<{
 
 export function Menu<T>({
   input,
+  output,
   MenuItem,
   items,
   keyFactory,
@@ -96,34 +99,32 @@ export function Menu<T>({
     items,
   ]);
 
-  useEffect(function () {
-    if (input == null) {
-      return;
-    }
-    const subscription = input.subscribe(function (input) {
-      const {
-        action,
-        progress,
-      } = input;
-      if (progress === InputProgress.Commit) {
-        switch (action) {
-          case InputAction.Up:
-            selectPrevious();
-            break;
-          case InputAction.Down:
-            selectNext();
-            break;
-          default:
-            break;
-        }
+  const childOutputHandler = useCallback(function (input: Input) {
+    const {
+      action,
+      progress,
+    } = input;
+    if (progress === InputProgress.Commit) {
+      switch (action) {
+        case InputAction.Up:
+          selectPrevious();
+          return true;
+        case InputAction.Down:
+          selectNext();
+          return true;
+        default:
+          return;
       }
-    });
-    return subscription.unsubscribe.bind(subscription);
+    }
   }, [
-    input,
-    selectPrevious,
     selectNext,
+    selectPrevious,
   ]);
+
+  const childOutput = useOutput(
+    output,
+    childOutputHandler,
+  );
 
   const computeScrollState = useCallback(function () {
     if (scroller.current == null) {
@@ -165,6 +166,8 @@ export function Menu<T>({
             <Item key={keyFactory(item)}>
               <MenuItem
                 input={selected ? input : undefined}
+                output={childOutput}
+
                 selected={selected}
                 // TODO useCallback
                 onSelected={() => {

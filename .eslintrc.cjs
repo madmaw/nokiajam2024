@@ -63,6 +63,12 @@ module.exports = {
       'warn',
       'always',
     ],
+    'react-hooks/exhaustive-deps': [
+      'warn',
+      // {
+      //   'additionalHooks': '(useInput|useOutput)',
+      // },
+    ],
     // eslint doesn't detect css modules properly, our TS settings will
     // complain about us using 'any' anyway
     '@typescript-eslint/no-unsafe-assignment': ['off'],
