@@ -5,20 +5,20 @@ import {
 } from 'rxjs';
 import { type Input } from 'ui/input';
 
-import { KeyInput } from './key_input';
+import { WindowInput } from './window_input';
 
 export function install(): {
-  KeyInstaller: React.ComponentType,
+  InputInstaller: React.ComponentType,
   input: Observable<Input>,
   } {
   const inputSubject = new Subject<Input>();
-  const KeyInstaller = createPartialObserverComponent(KeyInput, function () {
+  const InputInstaller = createPartialObserverComponent(WindowInput, function () {
     return {
       input: inputSubject,
     };
   });
   return {
-    KeyInstaller,
+    InputInstaller,
     input: inputSubject,
   };
 }

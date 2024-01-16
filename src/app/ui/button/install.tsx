@@ -3,13 +3,12 @@ import {
   type ComponentType,
   type PropsWithChildren,
 } from 'react';
-import {
-  Button,
-  type ButtonProps,
-} from 'ui/button';
+import { Button } from 'ui/button';
+
+import { type ButtonProps } from './types';
 
 export function install({ Text }: { Text: ComponentType<PropsWithChildren> }): {
-  Button: ComponentType<Omit<ButtonProps, 'Text'>>,
+  Button: ComponentType<ButtonProps>,
 } {
   const ButtonWithText = createPartialObserverComponent(
     Button,

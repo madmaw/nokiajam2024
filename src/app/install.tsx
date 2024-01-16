@@ -3,6 +3,7 @@ import { Settings } from 'model/settings';
 
 import { install as installColorSchemes } from './color_schemes/install';
 import { install as installFonts } from './fonts/install';
+import { install as installHome } from './home/install';
 import { install as installInput } from './input/install';
 import { install as installSkeleton } from './skeleton/install';
 import { install as installUi } from './ui/install';
@@ -15,7 +16,7 @@ export function install() {
   } = installFonts();
   const settings = new Settings(defaultColorScheme, fonts[0]);
   const {
-    KeyInstaller,
+    InputInstaller,
     input,
   } = installInput();
 
@@ -26,37 +27,26 @@ export function install() {
   const {
     Button,
     Text,
-    Menu,
-    MenuItem,
+    TextMenu,
   } = installUi({
     settings,
   });
 
+  const { Home } = installHome({
+    TitleText: Text,
+    TextMenu,
+  });
+
   contentHolder.Content = function () {
     return (
-      <>
-        <Menu
-          title="Mnu"
-          input={input}
-        >
-          <MenuItem label="Hellog!!?"/>
-          <MenuItem label="Item A" />
-          <MenuItem label="Item B" />
-          <MenuItem label="Item C" />
-          <MenuItem label="Item D" />
-          <Button label="Item E" />
-          <MenuItem label="Item F" />
-
-        </Menu>
-      </>
-
+      <Home input={input}/>
     );
   };
 
   return observer(function () {
     return (
       <>
-        <KeyInstaller/>
+        <InputInstaller/>
         <FontLoader />
         <Skeleton/>
       </>

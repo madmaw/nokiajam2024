@@ -1,46 +1,34 @@
 import styled from '@emotion/styled';
-import { UnreachableError } from 'base/errors';
 import { npx } from 'base/metrics';
 import {
-  Children,
   type ComponentType,
-  type PropsWithChildren,
+  type Key,
   useCallback,
   useEffect,
   useRef,
   useState,
 } from 'react';
 import {
-  type Input,
   InputAction,
+  InputProgress,
+  type MaybeWithInput,
 } from 'ui/input';
-import { type ScreenProps } from 'ui/screen/screen';
 
 import { VerticalScrollbar } from './scrollbar';
 
 const Container = styled.div`
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-`;
-
-const ScrollContainer = styled.div`
   display: flex;
   flex-direction: row;
   flex: 1;
   align-items: stretch;
   min-height: 0;
+  height: 100%;
 `;
 
 const ScrollbarContainer = styled.div`
   flex: 0;
   min-width: calc(2 * ${npx});
   margin-left: ${npx};
-`;
-
-const Title = styled.div`
-  flex: 0;
 `;
 
 const UnorderedList = styled.ul`
@@ -58,17 +46,27 @@ const Item = styled.li`
   list-style-type: none;
 `;
 
-export type MenuProps = PropsWithChildren<{
-  TitleText: ComponentType<PropsWithChildren>,
-  title?: string,
-}> & ScreenProps;
+export type MenuProps<T> = MaybeWithInput<{
+  readonly items: readonly T[],
+  readonly MenuItem: ComponentType<MaybeWithInput<{
+    readonly selected: boolean,
+    readonly onClick: () => void,
+  } & T>>,
+  readonly keyFactory: (item: T) => Key,
+  readonly selectedItemIndex: number | undefined,
+  readonly selectItemIndex: (index: number) => void,
+  readonly activateItem: (item: T, index: number) => void,
+}>;
 
-export function Menu({
-  TitleText,
-  title,
-  children,
+export function Menu<T>({
   input,
-}: MenuProps) {
+  MenuItem,
+  items,
+  keyFactory,
+  selectedItemIndex,
+  selectItemIndex,
+  activateItem,
+}: MenuProps<T>) {
   const scroller = useRef<HTMLUListElement>(null);
   const [
     {
@@ -83,45 +81,20 @@ export function Menu({
     contentDimension: 0,
   });
 
-  const focusPrevious = useCallback(function () {
-    const focused = scroller.current?.querySelector(':focus') as HTMLElement | undefined;
-    const target = focused == null
-      ? scroller.current?.firstElementChild?.lastElementChild
-      : focused.parentElement?.previousElementSibling?.firstChild;
-    (target as HTMLElement | undefined)?.focus();
-  }, []);
+  const selectPrevious = useCallback(function () {
+    selectItemIndex(Math.max(0, (selectedItemIndex ?? 0) - 1));
+  }, [
+    selectItemIndex,
+    selectedItemIndex,
+  ]);
 
-  const focusNext = useCallback(function () {
-    const focused = scroller.current?.querySelector(':focus') as HTMLElement | undefined;
-    const target = focused == null
-      ? scroller.current?.firstElementChild?.firstElementChild
-      : focused.parentElement?.nextElementSibling?.firstElementChild;
-    (target as HTMLElement | undefined)?.focus();
-    console.log(target);
-  }, []);
-
-  const selectCurrent = useCallback(function () {
-    const target = scroller.current?.firstElementChild?.firstElementChild as HTMLElement | undefined;
-    target?.click();
-  }, []);
-
-  const keyEventOnCurrent = useCallback(function ({
-    down, source,
-  }: Input) {
-    const focused = scroller.current?.querySelector(':focus') as HTMLElement | undefined;
-    const target = focused == null
-      ? scroller.current?.firstElementChild?.firstElementChild
-      : focused.parentElement?.nextElementSibling?.firstElementChild;
-    const event = new KeyboardEvent(
-      down ? 'keydown' : 'keyup',
-      {
-        key: source,
-      },
-    );
-    console.log('firing', event);
-    (target as HTMLElement | undefined)?.dispatchEvent(event);
-
-  }, []);
+  const selectNext = useCallback(function () {
+    selectItemIndex(Math.min(items.length - 1, (selectedItemIndex ?? items.length) + 1));
+  }, [
+    selectItemIndex,
+    selectedItemIndex,
+    items,
+  ]);
 
   useEffect(function () {
     if (input == null) {
@@ -130,51 +103,39 @@ export function Menu({
     const subscription = input.subscribe(function (input) {
       const {
         action,
-        down,
+        progress,
       } = input;
-      console.log('menu action', action);
-      switch (action) {
-        case InputAction.Up:
-          if (down) {
-            focusPrevious();
-          }
-          break;
-        case InputAction.Down:
-          if (down) {
-            focusNext();
-          }
-          break;
-        case InputAction.Left:
-        case InputAction.Right:
-        case InputAction.Select:
-          break;
-        default:
-          throw new UnreachableError(action);
+      if (progress === InputProgress.Commit) {
+        switch (action) {
+          case InputAction.Up:
+            selectPrevious();
+            break;
+          case InputAction.Down:
+            selectNext();
+            break;
+          default:
+            break;
+        }
       }
     });
     return subscription.unsubscribe.bind(subscription);
   }, [
     input,
-    focusPrevious,
-    focusNext,
-    keyEventOnCurrent,
+    selectPrevious,
+    selectNext,
   ]);
 
-  useEffect(function () {
-    // TODO return to previously focused index
-    const target = scroller.current?.firstElementChild?.firstElementChild as HTMLElement | undefined;
-    target?.focus();
-  }, [children]);
-
-  const onFocus = useCallback(function () {
+  const computeScrollState = useCallback(function () {
     if (scroller.current == null) {
       return;
     }
     const {
       scrollHeight,
     } = scroller.current;
-    const focused = scroller.current.querySelector(':focus') as HTMLElement | undefined;
-    const listItem = focused?.parentElement;
+    const listItem = selectedItemIndex != null
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      ? (scroller.current.children.item(selectedItemIndex) as HTMLElement | undefined)
+      : undefined;
     if (listItem != null) {
       setScrollState({
         scrollOffset: listItem.offsetTop,
@@ -189,39 +150,42 @@ export function Menu({
       contentDimension: scrollHeight,
     });
 
-  }, []);
+  }, [selectedItemIndex]);
 
-  useEffect(onFocus, [onFocus]);
+  useEffect(computeScrollState, [computeScrollState]);
 
   return (
     <Container>
-      {title && <Title>
-        <TitleText>
-          {title}
-        </TitleText>
-      </Title>}
-      <ScrollContainer>
-        <UnorderedList
-          ref={scroller}
-          onFocus={onFocus}
-          onBlur={onFocus}
-        >
-          {Children.map(children, function (child) {
-            return (
-              <Item>
-                {child}
-              </Item>
-            );
-          })}
-        </UnorderedList>
-        <ScrollbarContainer>
-          <VerticalScrollbar
-            containerDimension={containerDimension}
-            contentDimension={contentDimension}
-            scrollOffset={scrollOffset}
-          />
-        </ScrollbarContainer>
-      </ScrollContainer>
+      <UnorderedList
+        ref={scroller}
+      >
+        {items.map(function (item, index) {
+          const selected = selectedItemIndex === index;
+          return (
+            <Item key={keyFactory(item)}>
+              <MenuItem
+                input={selected ? input : undefined}
+                selected={selected}
+                // TODO useCallback
+                onSelected={() => {
+                  selectItemIndex(index);
+                }}
+                onClick={() => {
+                  activateItem(item, index);
+                }}
+                {...item}
+              />
+            </Item>
+          );
+        })}
+      </UnorderedList>
+      <ScrollbarContainer>
+        <VerticalScrollbar
+          containerDimension={containerDimension}
+          contentDimension={contentDimension}
+          scrollOffset={scrollOffset}
+        />
+      </ScrollbarContainer>
     </Container>
   );
 }

@@ -1,7 +1,15 @@
+import { type Observable } from 'rxjs';
+
+export const enum InputProgress {
+  Start,
+  Stop,
+  Commit,
+}
+
 export type Input = {
   action: InputAction,
   source: string,
-  down: boolean,
+  progress: InputProgress,
 }
 
 export const enum InputAction {
@@ -11,3 +19,7 @@ export const enum InputAction {
   Right,
   Select,
 }
+
+export type MaybeWithInput<T = {}> = T & {
+  readonly input: Observable<Input> | undefined;
+};
