@@ -6,6 +6,7 @@ import {
 
 export type MasterDetailProps = PropsWithChildren<{
   Heading: ComponentType | undefined,
+  Footer: ComponentType | undefined,
 }>;
 
 const Container = styled.div`
@@ -25,8 +26,13 @@ const DetailContainer = styled.div`
   min-height: 0;
 `;
 
+const FooterContainer = styled.div`
+  flex: 0;
+`;
+
 export function MasterDetail({
   Heading,
+  Footer,
   children,
 }: MasterDetailProps) {
   return (
@@ -39,6 +45,11 @@ export function MasterDetail({
       <DetailContainer>
         {children}
       </DetailContainer>
+      {Footer && (
+        <FooterContainer>
+          <Footer />
+        </FooterContainer>
+      )}
     </Container>
   );
 }

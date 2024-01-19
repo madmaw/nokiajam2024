@@ -1,21 +1,31 @@
 import { createPartialObserverComponent } from 'base/react/partial';
+import { action } from 'mobx';
 import { observer } from 'mobx-react';
 import { type Settings } from 'model/settings';
+import { type ComponentType } from 'react';
+import { type MaybeWithInput } from 'ui/input';
+import { Stack } from 'ui/stack/stack';
 
-import { ContentHolder } from './content_holder';
+import {
+  ContentController,
+  ContentHolder,
+} from './content_controller';
 import { Skeleton } from './skeleton';
 
 export function install({
   settings,
 }: {
   readonly settings: Settings,
-}) {
+}): {
+  contentController: ContentController,
+  Skeleton: ComponentType<MaybeWithInput>,
+} {
 
   const SkeletonWithTheme = createPartialObserverComponent(
     Skeleton,
     function () {
       const {
-        foreground, background, 
+        foreground, background,
       } = settings;
       return {
         foreground,
@@ -24,16 +34,28 @@ export function install({
     },
   );
   const contentHolder = new ContentHolder();
-  const SkeletonWithThemeAndContent = observer(function () {
-    const { Content } = contentHolder;
+  const contentController = new ContentController(contentHolder);
+  const requestPop = action(function () {
+    contentController.popScreen();
+  });
+  const SkeletonWithThemeAndContent = observer(function ({
+    input,
+    output,
+  }: MaybeWithInput) {
+    const { screens } = contentHolder;
     return (
       <SkeletonWithTheme>
-        {Content && <Content/>}
+        <Stack
+          screens={screens}
+          requestPop={requestPop}
+          input={input}
+          output={output}
+        />
       </SkeletonWithTheme>
     );
   });
   return {
     Skeleton: SkeletonWithThemeAndContent,
-    contentHolder,
+    contentController,
   };
 }

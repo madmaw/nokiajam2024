@@ -1,56 +1,69 @@
+import { type ContentController } from 'app/skeleton/content_controller';
 import {
-  type TextMenu,
   type TextMenuItem,
+  type TextMenuScreen,
 } from 'app/ui/menu/types';
-import { createPartialObserverComponent } from 'base/react/partial';
-import {
-  type ComponentType,
-  type PropsWithChildren,
-} from 'react';
-import { type MaybeWithInput } from 'ui/input';
-import { MasterDetail } from 'ui/master_detail';
+import { type Settings } from 'model/settings';
+import { type ColorScheme } from 'ui/color_scheme';
+import { type ScreenComponentProps } from 'ui/stack/stack';
 
-const items: TextMenuItem[] = [
-  {
-    label: 'Theme',
-  },
-  {
-    label: 'Back',
-  },
-];
+import { install as installTheme } from './theme/install';
+
+const itemTheme: TextMenuItem = {
+  label: 'Theme',
+};
+
+const items: TextMenuItem[] = [itemTheme];
 
 export function install({
-  TitleText,
   TextMenu,
+  contentController,
+  settings,
+  colorSchemes,
 }: {
-  TitleText: ComponentType<PropsWithChildren>,
-  TextMenu: TextMenu
+  TextMenu: TextMenuScreen,
+  contentController: ContentController,
+  settings: Settings,
+  colorSchemes: ColorScheme[],
 }) {
-  function activateItem(item: TextMenuItem, index: number) {
-    console.log(item, index);
+
+  const { ThemeScreen } = installTheme({
+    TextMenu,
+    colorSchemes,
+    settings,
+  });
+
+  function activateItem(item: TextMenuItem) {
+    switch (item) {
+      case itemTheme:
+        contentController.pushScreen({
+          Component: ThemeScreen,
+          key: 'theme',
+        });
+        break;
+      default:
+    }
   }
 
-  const Heading = createPartialObserverComponent(TitleText, function () {
-    return {
-      children: 'Settings',
-    };
-  });
+  function Footer() {
+    return (<>Select</>);
+  }
 
   function SettingsScreen({
     input,
     output,
-  }: MaybeWithInput) {
+    requestPop,
+  }: ScreenComponentProps) {
     return (
-      <MasterDetail
-        Heading={Heading}
-      >
-        <TextMenu
-          input={input}
-          output={output}
-          items={items}
-          activateItem={activateItem}
-        />
-      </MasterDetail>
+      <TextMenu
+        title='Settings'
+        Footer={Footer}
+        input={input}
+        output={output}
+        items={items}
+        activateItem={activateItem}
+        requestBack={requestPop}
+      />
     );
   }
 

@@ -11,16 +11,17 @@ const FillingCanvas = styled.canvas`
 `;
 
 type ScrollbarProps = {
-  scrollOffset: number,
+  itemOffset: number,
+  itemDimension: number,
   containerDimension: number,
   contentDimension: number,
 };
 
 export function VerticalScrollbar({
-
+  itemOffset,
+  itemDimension,
   containerDimension,
   contentDimension,
-  scrollOffset,
 }: ScrollbarProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -36,24 +37,27 @@ export function VerticalScrollbar({
       return;
     }
 
-    const y = Math.round(canvas.height / pxPerNpx * scrollOffset / contentDimension) * pxPerNpx;
-    const h = Math.round(canvas.height / pxPerNpx * containerDimension / contentDimension) * pxPerNpx;
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (y > 0) {
-      ctx.fillRect(0, 0, pxPerNpx, y);
+    if (contentDimension > containerDimension) {
+      const y = Math.round(canvas.height / pxPerNpx * itemOffset / contentDimension) * pxPerNpx;
+      const h = Math.round(canvas.height / pxPerNpx * itemDimension / contentDimension) * pxPerNpx;
+
+      if (y > 0) {
+        ctx.fillRect(0, 0, pxPerNpx, y);
+      }
+      if (h > 0) {
+        ctx.fillRect(0, y, canvas.width - pxPerNpx, pxPerNpx);
+        ctx.fillRect(0, y + h - pxPerNpx, canvas.width - pxPerNpx, pxPerNpx);
+        ctx.fillRect(canvas.width - pxPerNpx, y + pxPerNpx, pxPerNpx, h - 2 * pxPerNpx);
+      }
+      ctx.fillRect(0, y + h, pxPerNpx, canvas.height - y - h);
     }
-    if (h > 0) {
-      ctx.fillRect(0, y, canvas.width, pxPerNpx);
-      ctx.fillRect(0, y + h - pxPerNpx, canvas.width, pxPerNpx);
-    }
-    ctx.fillRect(canvas.width - pxPerNpx, y, pxPerNpx, h);
-    ctx.fillRect(0, y + h, pxPerNpx, canvas.height - y - h);
 
   }, [
-    containerDimension,
+    itemOffset,
+    itemDimension,
     contentDimension,
-    scrollOffset,
+    containerDimension,
   ]);
 
   return (

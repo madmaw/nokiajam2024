@@ -1,21 +1,24 @@
 import { createPartialObserverComponent } from 'base/react/partial';
 import { type ComponentType } from 'react';
-import { StatefulMenu } from 'ui/menu/stateful';
 
 import { type ButtonProps } from '../button/types';
+import { type Text } from '../typography/types';
+import { TextMenuScreenImpl } from './text_menu_screen';
 import {
-  type TextMenu as OutputTextMenu,
   type TextMenuItem,
+  type TextMenuScreen,
 } from './types';
-
-export const StatefulTextMenu = StatefulMenu<TextMenuItem>;
 
 export function install({
   Button,
+  TitleText,
+  FooterText,
 }: {
   Button: ComponentType<ButtonProps>,
+  TitleText: Text,
+  FooterText: Text,
 }): {
-  TextMenu: OutputTextMenu,
+    TextMenu: TextMenuScreen,
 } {
   const TextMenuItemImpl = createPartialObserverComponent(Button, function () {
     return {
@@ -23,14 +26,19 @@ export function install({
     };
   });
 
-  const CurriedTextMenu = createPartialObserverComponent(StatefulTextMenu, function () {
-    return {
-      MenuItem: TextMenuItemImpl,
-      keyFactory: function ({ label }: TextMenuItem) {
-        return label;
-      },
-    };
-  });
+  const CurriedTextMenu: TextMenuScreen = createPartialObserverComponent(
+    TextMenuScreenImpl,
+    function () {
+      return {
+        MenuItem: TextMenuItemImpl,
+        keyFactory: function ({ label }: TextMenuItem) {
+          return label;
+        },
+        FooterText,
+        TitleText,
+      };
+    },
+  );
 
   return {
     TextMenu: CurriedTextMenu,

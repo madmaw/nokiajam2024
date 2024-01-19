@@ -91,6 +91,14 @@ const Container = styled.div<{ background: Color, scale: number }>`
   background-color: ${({ background }) => background.toString({ format: 'hex' })};
 `;
 
+const Overlay = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, transparent 0, transparent 10vmax, #000000 35vmax);
+  pointer-events: none;
+`;
+
 export function Skeleton({
   children,
   foreground,
@@ -163,6 +171,7 @@ export function Skeleton({
           </Content>
           <ScanLines />
         </Spacer>
+        <Overlay />
       </Container>
 
     </>

@@ -29,7 +29,7 @@ const Container = styled.div`
 
 const ScrollbarContainer = styled.div`
   flex: 0;
-  min-width: calc(2 * ${npx});
+  min-width: calc(3 * ${npx});
   margin-left: ${npx};
 `;
 
@@ -37,6 +37,7 @@ const UnorderedList = styled.ul`
   position: relative;
   flex: 1;
   overflow: hidden;
+  scroll-behavior: auto;
   min-height: 0;
   margin-block-start: 0;
   padding-inline-start: 0;
@@ -56,7 +57,7 @@ export type MenuProps<T> = MaybeWithInput<{
   } & T>>,
   readonly keyFactory: (item: T) => Key,
   readonly selectedItemIndex: number | undefined,
-  readonly selectItemIndex: (index: number) => void,
+  readonly selectItemIndex?: (index: number) => void,
   readonly activateItem: (item: T, index: number) => void,
 }>;
 
@@ -73,26 +74,28 @@ export function Menu<T>({
   const scroller = useRef<HTMLUListElement>(null);
   const [
     {
-      scrollOffset,
+      itemOffset,
+      itemDimension,
       containerDimension,
       contentDimension,
     },
     setScrollState,
   ] = useState({
-    scrollOffset: 0,
+    itemOffset: 0,
+    itemDimension: 0,
     containerDimension: 0,
     contentDimension: 0,
   });
 
   const selectPrevious = useCallback(function () {
-    selectItemIndex(Math.max(0, (selectedItemIndex ?? 0) - 1));
+    selectItemIndex?.(Math.max(0, (selectedItemIndex ?? 0) - 1));
   }, [
     selectItemIndex,
     selectedItemIndex,
   ]);
 
   const selectNext = useCallback(function () {
-    selectItemIndex(Math.min(items.length - 1, (selectedItemIndex ?? items.length) + 1));
+    selectItemIndex?.(Math.min(items.length - 1, (selectedItemIndex ?? items.length) + 1));
   }, [
     selectItemIndex,
     selectedItemIndex,
@@ -132,6 +135,7 @@ export function Menu<T>({
     }
     const {
       scrollHeight,
+      clientHeight,
     } = scroller.current;
     const listItem = selectedItemIndex != null
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
@@ -139,15 +143,17 @@ export function Menu<T>({
       : undefined;
     if (listItem != null) {
       setScrollState({
-        scrollOffset: listItem.offsetTop,
-        containerDimension: listItem.clientHeight,
+        itemOffset: listItem.offsetTop,
+        itemDimension: listItem.clientHeight,
+        containerDimension: clientHeight,
         contentDimension: scrollHeight,
       });
       return;
     }
     setScrollState({
-      scrollOffset: 0,
-      containerDimension: 0,
+      itemOffset: 0,
+      itemDimension: 0,
+      containerDimension: clientHeight,
       contentDimension: scrollHeight,
     });
 
@@ -171,7 +177,7 @@ export function Menu<T>({
                 selected={selected}
                 // TODO useCallback
                 onSelected={() => {
-                  selectItemIndex(index);
+                  selectItemIndex?.(index);
                 }}
                 onClick={() => {
                   activateItem(item, index);
@@ -182,13 +188,16 @@ export function Menu<T>({
           );
         })}
       </UnorderedList>
-      <ScrollbarContainer>
-        <VerticalScrollbar
-          containerDimension={containerDimension}
-          contentDimension={contentDimension}
-          scrollOffset={scrollOffset}
-        />
-      </ScrollbarContainer>
+      {containerDimension < contentDimension && (
+        <ScrollbarContainer>
+          <VerticalScrollbar
+            itemOffset={itemOffset}
+            itemDimension={itemDimension}
+            containerDimension={containerDimension}
+            contentDimension={contentDimension}
+          />
+        </ScrollbarContainer>
+      )}
     </Container>
   );
 }

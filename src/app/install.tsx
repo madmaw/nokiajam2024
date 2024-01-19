@@ -5,7 +5,6 @@ import { install as installFonts } from './fonts/install';
 import { install as installInput } from './input/install';
 import { install as installHome } from './screen/home/install';
 import { install as installSettings } from './screen/settings/install';
-import { install as installTheme } from './screen/settings/theme/install';
 import { install as installSkeleton } from './skeleton/install';
 import { install as installUi } from './ui/install';
 
@@ -18,18 +17,19 @@ export function install() {
     FontLoader,
     fonts,
   } = installFonts();
-  const settings = new Settings(defaultColorScheme, fonts[0]);
   const {
     InputInstaller,
     input,
   } = installInput();
 
+  const settings = new Settings(defaultColorScheme, fonts[0]);
   const {
     Skeleton,
-    contentHolder,
+    contentController,
   } = installSkeleton({
     settings,
   });
+
   const {
     Button,
     Text,
@@ -38,47 +38,33 @@ export function install() {
     settings,
   });
 
-  const { ThemeScreen } = installTheme({
-    TitleText: Text,
+  const { SettingsScreen } = installSettings({
     TextMenu,
+    contentController,
     colorSchemes,
     settings,
   });
 
-  const { SettingsScreen } = installSettings({
-    TitleText: Text,
-    TextMenu,
-  });
-
   const { HomeScreen } = installHome({
-    TitleText: Text,
     TextMenu,
+    SettingsScreen,
+    contentController,
   });
 
-  contentHolder.Content = function () {
-    return (
-      <HomeScreen
-        input={input}
-        output={undefined}
-      />
-    );
-  };
-
-  contentHolder.Content = function () {
-    return (
-      <ThemeScreen
-        input={input}
-        output={undefined}
-      />
-    );
-  };
+  contentController.pushScreen({
+    Component: HomeScreen,
+    key: 'home',
+  });
 
   return function () {
     return (
       <>
         <InputInstaller/>
         <FontLoader />
-        <Skeleton/>
+        <Skeleton
+          input={input}
+          output={undefined}
+        />
       </>
     );
   };

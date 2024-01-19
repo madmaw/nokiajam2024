@@ -29,7 +29,7 @@ export type ButtonProps = MaybeWithInput<{
   readonly onSelected?: () => void,
 }>;
 
-const inset = 1;
+const inset = 2;
 
 const UnstyledButton = styled.button<{
   active: boolean,

@@ -1,74 +1,60 @@
 import {
-  type TextMenu,
   type TextMenuItem,
+  type TextMenuScreen,
 } from 'app/ui/menu/types';
-import { createPartialObserverComponent } from 'base/react/partial';
 import { runInAction } from 'mobx';
 import { type Settings } from 'model/settings';
-import {
-  type ComponentType,
-  type PropsWithChildren,
-} from 'react';
+import { useCallback } from 'react';
 import { type ColorScheme } from 'ui/color_scheme';
-import { type MaybeWithInput } from 'ui/input';
-import { MasterDetail } from 'ui/master_detail';
-
-const back: TextMenuItem = {
-  label: 'Back',
-};
+import { type ScreenComponentProps } from 'ui/stack/stack';
 
 export function install({
-  TitleText,
   TextMenu,
   colorSchemes,
   settings,
 }: {
-  TitleText: ComponentType<PropsWithChildren>,
-  TextMenu: TextMenu
+  TextMenu: TextMenuScreen,
   colorSchemes: ColorScheme[],
   settings: Settings,
 }) {
+
   const colorSchemeItems: TextMenuItem[] = colorSchemes.map(function (colorScheme) {
     return {
       label: colorScheme.name,
     };
   }, []);
-  const items = [
-    ...colorSchemeItems,
-    back,
-  ];
+  const items = colorSchemeItems;
 
-  function activateItem(item: TextMenuItem, index: number) {
-    if (item === back) {
-      console.log('back');
-    } else {
-      runInAction(function () {
-        settings.colorScheme = colorSchemes[index];
-      });
-    }
+  function Footer() {
+    return (<>OK</>);
   }
 
-  const Heading = createPartialObserverComponent(TitleText, function () {
-    return {
-      children: 'Theme',
-    };
-  });
+  function selectItemIndex(index: number) {
+    runInAction(function () {
+      settings.colorScheme = colorSchemes[index];
+    });
+  }
 
   function ThemeScreen({
     input,
     output,
-  }: MaybeWithInput) {
+    requestPop,
+  }: ScreenComponentProps) {
+    const activateItem = useCallback(function() {
+      requestPop?.();
+    }, [requestPop]);
+
     return (
-      <MasterDetail
-        Heading={Heading}
-      >
-        <TextMenu
-          input={input}
-          output={output}
-          items={items}
-          activateItem={activateItem}
-        />
-      </MasterDetail>
+      <TextMenu
+        input={input}
+        output={output}
+        items={items}
+        activateItem={activateItem}
+        selectItemIndex={selectItemIndex}
+        initialSelectedItemIndex={colorSchemes.indexOf(settings.colorScheme)}
+        title='Theme'
+        Footer={Footer}
+      />
     );
   }
 

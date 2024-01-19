@@ -11,6 +11,8 @@ export function install(params: { settings: Settings }) {
     TextMenu,
   } = installTextMenu({
     Button,
+    TitleText: Text,
+    FooterText: Text,
   });
   return {
     Text,

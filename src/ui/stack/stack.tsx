@@ -1,3 +1,5 @@
+import styled from '@emotion/styled';
+import { transparency } from 'base/colors';
 import {
   type ComponentType,
   useCallback,
@@ -10,10 +12,14 @@ import {
   useOutput,
 } from 'ui/input';
 
-type Screen = {
-  readonly Component: ComponentType<MaybeWithInput<{
-    requestPop: (() => void) | undefined,
-  }>>,
+export type ScreenComponentProps = MaybeWithInput<{
+  requestPop: (() => void) | undefined,
+}>;
+
+export type ScreenComponent = ComponentType<ScreenComponentProps>;
+
+export type Screen = {
+  readonly Component: ScreenComponent,
   readonly key: string,
 };
 
@@ -21,6 +27,23 @@ export type StackProps = MaybeWithInput<{
   readonly screens: readonly Screen[],
   readonly requestPop: () => void,
 }>;
+
+const Container = styled.div`
+  position: relative;
+  min-height: 0;
+  height: 100%;
+`;
+
+const ScreenContainer = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  min-height: 0;
+  height: 100%;
+  background-color: ${transparency.toString({ format: 'hex' })};
+`;
 
 export function Stack({
   screens,
@@ -46,7 +69,7 @@ export function Stack({
   const childOutput = useOutput(output, outputHandler);
 
   return (
-    <div>
+    <Container>
       {screens.map(function (
         {
           Component,
@@ -55,26 +78,28 @@ export function Stack({
         index,
       ) {
         return (
-          <Component
-            key={key}
-            input={
-              index === screens.length - 1
-                ? input
-                : undefined
-            }
-            output={
-              index === screens.length - 1
-                ? childOutput
-                : undefined
-            }
-            requestPop={
-              index === screens.length - 1
-                ? requestPop
-                : undefined
-            }
-          />
+          <ScreenContainer key={ key }>
+            <Component
+
+              input={
+                index === screens.length - 1
+                  ? input
+                  : undefined
+              }
+              output={
+                index === screens.length - 1
+                  ? childOutput
+                  : undefined
+              }
+              requestPop={
+                index === screens.length - 1
+                  ? requestPop
+                  : undefined
+              }
+            />
+          </ScreenContainer>
         );
       })}
-    </div>
+    </Container>
   );
 }

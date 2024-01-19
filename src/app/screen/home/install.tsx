@@ -1,15 +1,14 @@
+import { type ContentController } from 'app/skeleton/content_controller';
 import {
-  type TextMenu,
   type TextMenuItem,
+  type TextMenuScreen,
 } from 'app/ui/menu/types';
-import { createPartialObserverComponent } from 'base/react/partial';
-import {
-  type ComponentType,
-  type PropsWithChildren,
-} from 'react';
 import { type MaybeWithInput } from 'ui/input';
-import { MasterDetail } from 'ui/master_detail';
+import { type ScreenComponent } from 'ui/stack/stack';
 
+const itemSettings: TextMenuItem = {
+  label: 'Settings',
+};
 const items: TextMenuItem[] = [
   {
     label: 'New Game',
@@ -17,46 +16,51 @@ const items: TextMenuItem[] = [
   {
     label: 'Continue',
   },
-  {
-    label: 'Settings',
-  },
+  itemSettings,
   {
     label: 'Exit',
   },
 ];
 
 export function install({
-  TitleText,
   TextMenu,
+  SettingsScreen,
+  contentController,
 }: {
-  TitleText: ComponentType<PropsWithChildren>,
-  TextMenu: TextMenu,
+  TextMenu: TextMenuScreen,
+  SettingsScreen: ScreenComponent,
+  contentController: ContentController,
 }) {
   function activateItem(item: TextMenuItem, index: number) {
-    console.log(item, index);
+    switch (item) {
+      case itemSettings:
+        contentController.pushScreen({
+          Component: SettingsScreen,
+          key: 'settings',
+        });
+        break;
+      default:
+        console.log(item, index);
+    }
   }
 
-  const Heading = createPartialObserverComponent(TitleText, function () {
-    return {
-      children: 'Home',
-    };
-  });
+  function Footer() {
+    return (<>Select</>);
+  }
 
   function HomeScreen({
     input,
     output,
   }: MaybeWithInput) {
     return (
-      <MasterDetail
-        Heading={Heading}
-      >
-        <TextMenu
-          input={input}
-          output={output}
-          items={items}
-          activateItem={activateItem}
-        />
-      </MasterDetail>
+      <TextMenu
+        input={input}
+        output={output}
+        items={items}
+        activateItem={activateItem}
+        title='Home'
+        Footer={Footer}
+      />
     );
   }
 
