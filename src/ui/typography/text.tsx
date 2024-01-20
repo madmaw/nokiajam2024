@@ -1,6 +1,13 @@
 import styled from '@emotion/styled';
-import { npx } from 'base/metrics';
-import { type PropsWithChildren } from 'react';
+import {
+  npx,
+  pxPerNpx,
+} from 'base/metrics';
+import {
+  type PropsWithChildren,
+  useMemo,
+  useState,
+} from 'react';
 
 export const enum TextAlignment {
   Start = 'start',
@@ -20,6 +27,7 @@ const Container = styled.div<{
   unscaledFontSize: number,
   unscaledLineHeight: number,
   alignment: TextAlignment,
+  pad: boolean,
 }>`
   overflow: hidden;
   font-family: ${({ fontFamily }) => fontFamily};
@@ -32,6 +40,7 @@ const Container = styled.div<{
     unscaledLineHeight,
     unscaledFontSize,
   }) => `calc(${(unscaledFontSize - unscaledLineHeight)/2} * ${npx}) 0`};
+  margin-right: ${({ pad }) => pad ? npx : 0 };
 `;
 
 export function Text({
@@ -41,12 +50,39 @@ export function Text({
   unscaledLineHeight,
   alignment = TextAlignment.Start,
 }: TextProps) {
+  const [
+    ref,
+    setRef,
+  ] = useState<HTMLDivElement | null>(null);
+
+  const pad = useMemo(function () {
+    const textContent = ref?.textContent;
+    if (textContent == null || alignment !== TextAlignment.Center) {
+      return false;
+    }
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (ctx == null) {
+      return false;
+    }
+    ctx.font = `${unscaledFontSize * pxPerNpx}px ${fontFamily}`;
+    const { width } = ctx.measureText(textContent);
+    return Math.round(width / pxPerNpx) % 2 !== 0;
+  }, [
+    ref,
+    alignment,
+    fontFamily,
+    unscaledFontSize,
+  ]);
+
   return (
     <Container
+      ref={setRef}
       fontFamily={fontFamily}
       unscaledFontSize={unscaledFontSize}
       unscaledLineHeight={unscaledLineHeight}
       alignment={alignment}
+      pad={pad}
     >
       {children}
     </Container>

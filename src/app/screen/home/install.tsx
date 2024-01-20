@@ -45,7 +45,7 @@ export function install({
   }
 
   function Footer() {
-    return (<>Select</>);
+    return (<>Selectx</>);
   }
 
   function HomeScreen({

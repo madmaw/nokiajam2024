@@ -4,7 +4,7 @@ import {
 } from '@emotion/react';
 import type { FontFile } from 'ui/font';
 
-export function FontsLoader({
+export function FontsRulesRenderer({
   fontFiles,
   fontFamily,
 }: {

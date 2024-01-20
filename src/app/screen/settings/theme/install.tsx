@@ -4,7 +4,6 @@ import {
 } from 'app/ui/menu/types';
 import { runInAction } from 'mobx';
 import { type Settings } from 'model/settings';
-import { useCallback } from 'react';
 import { type ColorScheme } from 'ui/color_scheme';
 import { type ScreenComponentProps } from 'ui/stack/stack';
 
@@ -26,10 +25,10 @@ export function install({
   const items = colorSchemeItems;
 
   function Footer() {
-    return (<>OK</>);
+    return (<>Use Theme</>);
   }
 
-  function selectItemIndex(index: number) {
+  function activateItem(_: TextMenuItem, index: number) {
     runInAction(function () {
       settings.colorScheme = colorSchemes[index];
     });
@@ -40,9 +39,6 @@ export function install({
     output,
     requestPop,
   }: ScreenComponentProps) {
-    const activateItem = useCallback(function() {
-      requestPop?.();
-    }, [requestPop]);
 
     return (
       <TextMenu
@@ -50,10 +46,10 @@ export function install({
         output={output}
         items={items}
         activateItem={activateItem}
-        selectItemIndex={selectItemIndex}
         initialSelectedItemIndex={colorSchemes.indexOf(settings.colorScheme)}
         title='Theme'
         Footer={Footer}
+        requestBack={requestPop}
       />
     );
   }

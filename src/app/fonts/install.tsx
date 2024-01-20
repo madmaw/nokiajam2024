@@ -1,17 +1,38 @@
-import { createPartialObserverComponent } from 'base/react/partial';
-
-import { FontsLoader } from './font_loader';
+import { FontFaceLoader } from './font_face_loader';
+import { FontsRulesRenderer } from './font_rules_renderer';
 import { nokia } from './nokia';
 
 export function install() {
   const fonts = [nokia];
 
-  // TODO observe selected font somehow
-  const FontLoader = createPartialObserverComponent(FontsLoader, function () {
-    return nokia;
+  const fontLoader = new FontFaceLoader();
+
+  const promises = fonts.map(function (font) {
+    return fontLoader.loadFontFamily(font);
   });
+
+  const fontLoadPromise = Promise.all(promises).then(function() {
+    return;
+  });
+
+  function FontRulesRendererImpl() {
+    return (
+      <>
+        {fonts.map(function (font) {
+          return (
+            <FontsRulesRenderer
+              key={font.fontFamily}
+              {...font}
+            />
+          );
+        })}
+      </>
+    );
+  }
+
   return {
-    FontLoader,
     fonts,
+    fontLoadPromise,
+    FontRulesRenderer: FontRulesRendererImpl,
   };
 }

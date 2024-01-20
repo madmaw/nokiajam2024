@@ -1,4 +1,8 @@
+import { createPartialObserverComponent } from 'base/react/partial';
+import { fromPromise } from 'mobx-utils';
 import { Settings } from 'model/settings';
+import { Loading } from 'ui/loading';
+import { type ScreenComponentProps } from 'ui/stack/stack';
 
 import { install as installColorSchemes } from './color_schemes/install';
 import { install as installFonts } from './fonts/install';
@@ -6,7 +10,10 @@ import { install as installInput } from './input/install';
 import { install as installHome } from './screen/home/install';
 import { install as installSettings } from './screen/settings/install';
 import { install as installSkeleton } from './skeleton/install';
+import { install as installSplashScreen } from './splash/install';
 import { install as installUi } from './ui/install';
+
+const LoadingScreen: typeof Loading<void,ScreenComponentProps> = Loading;
 
 export function install() {
   const {
@@ -14,9 +21,23 @@ export function install() {
     colorSchemes,
   } = installColorSchemes();
   const {
-    FontLoader,
     fonts,
+    fontLoadPromise,
+    FontRulesRenderer,
   } = installFonts();
+  // weird eslint error
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
+  const {
+    SplashScreen,
+    splashScreenAnimationPromise,
+  } = installSplashScreen();
+
+  const initObservable = fromPromise(Promise.all([
+    fontLoadPromise,
+    splashScreenAnimationPromise,
+  ]));
+
   const {
     InputInstaller,
     input,
@@ -51,16 +72,35 @@ export function install() {
     contentController,
   });
 
+  // TODO
+  function Rejected() {
+    return (
+      <>Error</>
+    );
+  }
+
+  const LoadingHomeScreen = createPartialObserverComponent(
+    LoadingScreen,
+    function () {
+      return {
+        observable: initObservable,
+        Fulfilled: HomeScreen,
+        Pending: SplashScreen,
+        Rejected,
+      };
+    },
+  );
+
   contentController.pushScreen({
-    Component: HomeScreen,
+    Component: LoadingHomeScreen,
     key: 'home',
   });
 
   return function () {
     return (
       <>
-        <InputInstaller/>
-        <FontLoader />
+        <FontRulesRenderer />
+        <InputInstaller />
         <Skeleton
           input={input}
           output={undefined}

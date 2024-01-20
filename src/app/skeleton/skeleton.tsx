@@ -70,12 +70,12 @@ const Spacer = styled.div`
   height: calc(${heightCalc});
   filter:
     url(#${filterName})
-    blur(calc(.15 * ${npx}))
+    blur(calc(.05 * ${npx}))
     drop-shadow(0 calc(${npx}/3) calc(${npx}/2) rgba(0, 0, 0, 0.5));
   ${mediaQuery} {
     filter:
       url(#${filterName})
-      blur(calc(.05 * ${npx}))
+      blur(calc(.03 * ${npx}))
       drop-shadow(0 calc(${npx}/3) calc(${npx}/2) rgba(0, 0, 0, 0.5));
   }
 
@@ -87,7 +87,7 @@ const Container = styled.div<{ background: Color, scale: number }>`
   left: 0;
   width: 100%;
   height: 100%;
-  transform: ${({ scale }) => `scale(${scale})`};
+  transform: ${({ scale }) => `scale(${Math.max(1, Math.floor(scale * 2)/2)})`};
   background-color: ${({ background }) => background.toString({ format: 'hex' })};
 `;
 
