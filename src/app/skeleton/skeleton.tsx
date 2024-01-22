@@ -62,7 +62,7 @@ const ScanLines = styled.div`
   }
 `;
 
-const Spacer = styled.div`
+const Spacer = styled.div<{ backlit: boolean }>`
   position: absolute;
   left: calc((100vw - ${widthCalc}) / 2);
   top: calc((100vh - ${heightCalc}) / 2);
@@ -70,13 +70,11 @@ const Spacer = styled.div`
   height: calc(${heightCalc});
   filter:
     url(#${filterName})
-    blur(calc(.05 * ${npx}))
-    drop-shadow(0 calc(${npx}/3) calc(${npx}/2) rgba(0, 0, 0, 0.5));
+    ${({ backlit }) => !backlit && `blur(calc(.05 * ${npx})) drop-shadow(0 calc(${npx}/3) calc(${npx}/2) rgba(0, 0, 0, 0.5))`};
   ${mediaQuery} {
     filter:
       url(#${filterName})
-      blur(calc(.03 * ${npx}))
-      drop-shadow(0 calc(${npx}/3) calc(${npx}/2) rgba(0, 0, 0, 0.5));
+      ${({ backlit }) => !backlit && `blur(calc(.03 * ${npx})) drop-shadow(0 calc(${npx}/3) calc(${npx}/2) rgba(0, 0, 0, 0.5))`};
   }
 
 `;
@@ -103,9 +101,11 @@ export function Skeleton({
   children,
   foreground,
   background,
+  backlit,
 }: PropsWithChildren<{
   readonly foreground: ReadonlyColor,
   readonly background: ReadonlyColor,
+  readonly backlit: boolean,
 }>) {
   const [
     scale,
@@ -148,8 +148,20 @@ export function Skeleton({
       >
         <defs>
           <filter id={filterName}>
+            <feGaussianBlur
+              in='SourceGraphic'
+              stdDeviation='2'
+              result='blurred'
+            />
+            <feBlend
+              in='SourceGraphic'
+              in2='blurred'
+              result='combined'
+              mode='lighten'
+            />
             <feColorMatrix
               type='matrix'
+              in={backlit ? 'combined' : 'SourceGraphic'}
               values={`
                 0 0 0 ${rgb[0]} 0
                 0 0 0 ${rgb[1]} 0
@@ -165,7 +177,7 @@ export function Skeleton({
         background={background}
         scale={scale}
       >
-        <Spacer>
+        <Spacer backlit={backlit}>
           <Content >
             {children}
           </Content>

@@ -25,11 +25,14 @@ export function install({
     Skeleton,
     function () {
       const {
-        foreground, background,
+        foreground,
+        background,
+        backlit,
       } = settings;
       return {
         foreground,
         background,
+        backlit,
       };
     },
   );

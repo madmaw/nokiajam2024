@@ -5,17 +5,21 @@ import { install as installTextMenu } from './menu/install';
 import { install as installTypography } from './typography/install';
 
 export function install(params: { settings: Settings }) {
-  const { Text } = installTypography(params);
-  const { Button } = installButton({ Text });
+  const {
+    TextBody,
+    TextDetail,
+    TextTitle,
+  } = installTypography(params);
+  const { Button } = installButton({ Text: TextBody });
   const {
     TextMenu,
   } = installTextMenu({
     Button,
-    TitleText: Text,
-    FooterText: Text,
+    TitleText: TextBody,
+    FooterText: TextDetail,
   });
   return {
-    Text,
+    Text: TextBody,
     Button,
     TextMenu,
   };

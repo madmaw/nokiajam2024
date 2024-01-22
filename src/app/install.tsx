@@ -43,7 +43,7 @@ export function install() {
     input,
   } = installInput();
 
-  const settings = new Settings(defaultColorScheme, fonts[0]);
+  const settings = new Settings(defaultColorScheme, fonts);
   const {
     Skeleton,
     contentController,

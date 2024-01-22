@@ -1,13 +1,27 @@
+import { type Fonts } from 'model/settings';
+
 import { FontFaceLoader } from './font_face_loader';
 import { FontsRulesRenderer } from './font_rules_renderer';
-import { nokia } from './nokia';
+import {
+  nokia,
+  nokiaThin,
+} from './nokia';
 
 export function install() {
-  const fonts = [nokia];
+  const allFonts = [
+    nokia,
+    nokiaThin,
+  ];
+  const fonts: Fonts = {
+    body: nokia,
+    detail: nokiaThin,
+    // TODO large font
+    title: nokia,
+  };
 
   const fontLoader = new FontFaceLoader();
 
-  const promises = fonts.map(function (font) {
+  const promises = allFonts.map(function (font) {
     return fontLoader.loadFontFamily(font);
   });
 
@@ -18,7 +32,7 @@ export function install() {
   function FontRulesRendererImpl() {
     return (
       <>
-        {fonts.map(function (font) {
+        {allFonts.map(function (font) {
           return (
             <FontsRulesRenderer
               key={font.fontFamily}

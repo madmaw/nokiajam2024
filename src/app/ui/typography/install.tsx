@@ -7,13 +7,28 @@ export function install({
 }: {
   settings: Settings,
 }) {
-  const TextWithTheme = createPartialObserverComponent(
+  const TextBody = createPartialObserverComponent(
     Text,
     function() {
-      return settings.body;
+      return settings.fonts.body;
     },
   );
+  const TextDetail = createPartialObserverComponent(
+    Text,
+    function () {
+      return settings.fonts.body;
+    },
+  );
+  const TextTitle = createPartialObserverComponent(
+    Text,
+    function () {
+      return settings.fonts.body;
+    },
+  );
+
   return {
-    Text: TextWithTheme,
+    TextBody,
+    TextDetail,
+    TextTitle,
   };
 }

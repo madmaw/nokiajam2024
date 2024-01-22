@@ -1,4 +1,4 @@
-import { SplashScreen as SplashScreenImpl } from './splash_screen';
+import { NokiaSplashScreen } from './nokia_splash_screen';
 
 export function install() {
 
@@ -6,7 +6,7 @@ export function install() {
 
   function SplashScreen() {
     return (
-      <SplashScreenImpl animationComplete={animationComplete}/>
+      <NokiaSplashScreen animationComplete={animationComplete}/>
     );
   }
 

@@ -13,6 +13,14 @@ export function FontsRulesRenderer({
 }) {
   return (
     <>
+      <span
+        style={{
+          fontFamily: fontFamily,
+          display: 'none',
+        }}
+      >
+A
+      </span>
       {fontFiles.map(function ({
         format, uri,
       }) {

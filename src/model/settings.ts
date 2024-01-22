@@ -1,34 +1,43 @@
-import { observable } from 'mobx';
+import {
+  computed,
+  observable,
+} from 'mobx';
 import { type ColorScheme } from 'ui/color_scheme';
 import { type FontFamily } from 'ui/font';
+
+export type Fonts = {
+  readonly body: FontFamily,
+  readonly detail: FontFamily,
+  readonly title: FontFamily,
+};
 
 export class Settings {
   @observable.ref
   accessor colorScheme: ColorScheme;
 
   @observable.ref
-  accessor invertColorScheme: boolean = false;
+  accessor fonts: Fonts;
 
-  @observable.ref
-  accessor body: FontFamily;
-
+  @computed
   get foreground() {
-    return this.invertColorScheme
-      ? this.colorScheme.background
-      : this.colorScheme.foreground;
+    return this.colorScheme.foreground;
   }
 
+  @computed
   get background() {
-    return this.invertColorScheme
-      ? this.colorScheme.foreground
-      : this.colorScheme.background;
+    return this.colorScheme.background;
+  }
+
+  @computed
+  get backlit() {
+    return this.colorScheme.backlit;
   }
 
   constructor(
     colorScheme: ColorScheme,
-    body: FontFamily,
+    fonts: Fonts,
   ) {
     this.colorScheme = colorScheme;
-    this.body = body;
+    this.fonts = fonts;
   }
 }
