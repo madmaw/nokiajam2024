@@ -8,7 +8,7 @@ export function install(params: { settings: Settings }) {
   const {
     TextBody,
     TextDetail,
-    TextTitle,
+    TextLarge,
   } = installTypography(params);
   const { Button } = installButton({ Text: TextBody });
   const {
@@ -16,7 +16,7 @@ export function install(params: { settings: Settings }) {
   } = installTextMenu({
     Button,
     TitleText: TextBody,
-    FooterText: TextDetail,
+    FooterText: TextBody,
   });
   return {
     Text: TextBody,

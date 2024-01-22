@@ -8,7 +8,7 @@ import { type FontFamily } from 'ui/font';
 export type Fonts = {
   readonly body: FontFamily,
   readonly detail: FontFamily,
-  readonly title: FontFamily,
+  readonly large: FontFamily,
 };
 
 export class Settings {

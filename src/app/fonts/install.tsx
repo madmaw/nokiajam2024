@@ -16,7 +16,7 @@ export function install() {
     body: nokia,
     detail: nokiaThin,
     // TODO large font
-    title: nokia,
+    large: nokia,
   };
 
   const fontLoader = new FontFaceLoader();

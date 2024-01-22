@@ -1,4 +1,6 @@
-import { NokiaSplashScreen } from './nokia_splash_screen';
+import { AnimatedSplashScreen } from './animated_splash_screen';
+import backgroundUrl from './resources/bg.png';
+import nokiaClassicAnimationUrl from './resources/nokia_classic.gif';
 
 export function install() {
 
@@ -6,7 +8,11 @@ export function install() {
 
   function SplashScreen() {
     return (
-      <NokiaSplashScreen animationComplete={animationComplete}/>
+      <AnimatedSplashScreen
+        backgroundUrl={backgroundUrl}
+        gifUrl={nokiaClassicAnimationUrl}
+        animationComplete={animationComplete}
+      />
     );
   }
 

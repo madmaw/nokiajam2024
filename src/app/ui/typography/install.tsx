@@ -16,19 +16,19 @@ export function install({
   const TextDetail = createPartialObserverComponent(
     Text,
     function () {
-      return settings.fonts.body;
+      return settings.fonts.detail;
     },
   );
-  const TextTitle = createPartialObserverComponent(
+  const TextLarge = createPartialObserverComponent(
     Text,
     function () {
-      return settings.fonts.body;
+      return settings.fonts.large;
     },
   );
 
   return {
     TextBody,
     TextDetail,
-    TextTitle,
+    TextLarge,
   };
 }
