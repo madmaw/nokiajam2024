@@ -25,6 +25,7 @@ const Container = styled.div`
   align-items: stretch;
   min-height: 0;
   height: 100%;
+  overflow: hidden;
 `;
 
 const ScrollbarContainer = styled.div`
@@ -86,6 +87,10 @@ export function Menu<T>({
     containerDimension: 0,
     contentDimension: 0,
   });
+  const [
+    marginTop,
+    setMarginTop,
+  ] = useState(0);
 
   const selectPrevious = useCallback(function () {
     selectItemIndex?.(Math.max(0, (selectedItemIndex ?? 0) - 1));
@@ -145,7 +150,7 @@ export function Menu<T>({
       setScrollState({
         itemOffset: listItem.offsetTop,
         itemDimension: listItem.clientHeight,
-        containerDimension: clientHeight,
+        containerDimension: clientHeight + marginTop,
         contentDimension: scrollHeight,
       });
       return;
@@ -153,18 +158,47 @@ export function Menu<T>({
     setScrollState({
       itemOffset: 0,
       itemDimension: 0,
-      containerDimension: clientHeight,
+      containerDimension: clientHeight - marginTop,
       contentDimension: scrollHeight,
     });
 
-  }, [selectedItemIndex]);
+  }, [
+    selectedItemIndex,
+    marginTop,
+  ]);
 
   useEffect(computeScrollState, [computeScrollState]);
+  useEffect(function () {
+    if (scroller.current == null) {
+      return;
+    }
+    const {
+      clientHeight,
+    } = scroller.current;
+    const actualClientHeight = clientHeight + marginTop;
+    const newMarginTop = Math.min(
+      // can't scroll past the top
+      0,
+      // preference existing scroll window
+      Math.max(-itemOffset, marginTop),
+      // scroll beyond the end of the scroll window
+      actualClientHeight - itemOffset - itemDimension,
+    );
+    setMarginTop(newMarginTop);
+    //console.log(scrollHeight, itemOffset, itemDimension, marginTop, newMarginTop);
+  }, [
+    marginTop,
+    itemDimension,
+    itemOffset,
+  ]);
 
   return (
     <Container>
       <UnorderedList
         ref={scroller}
+        style={{
+          marginTop: `${marginTop}px`,
+        }}
       >
         {items.map(function (item, index) {
           const selected = selectedItemIndex === index;
@@ -173,7 +207,6 @@ export function Menu<T>({
               <MenuItem
                 input={selected ? input : undefined}
                 output={childOutput}
-
                 selected={selected}
                 // TODO useCallback
                 onSelected={() => {

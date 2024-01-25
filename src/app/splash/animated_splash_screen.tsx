@@ -10,6 +10,7 @@ export type AnimatedSplashScreenProps = {
   gifUrl: string,
   backgroundUrl: string,
   animationComplete: () => void,
+  animationChanged?: () => void,
 }
 
 const Container = styled.div`
@@ -35,6 +36,7 @@ export function AnimatedSplashScreen({
   gifUrl,
   backgroundUrl,
   animationComplete,
+  animationChanged,
 }: AnimatedSplashScreenProps) {
   const [
     backgroundLoaded,
@@ -71,6 +73,7 @@ export function AnimatedSplashScreen({
           src={gifUrl}
           onError={onGifError}
           onAnimationEnd={animationComplete}
+          onFrame={animationChanged}
         />
       )}
     </Container>

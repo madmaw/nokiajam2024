@@ -97,7 +97,7 @@ export function Button({
   ]);
 
   const focus = useCallback(function () {
-    buttonRef.current?.focus();
+    //buttonRef.current?.focus();
   }, []);
 
   useEffect(function () {
@@ -134,6 +134,7 @@ export function Button({
       active={active}
       selected={selected}
       stretch={stretch}
+      tabIndex={-1}
     >
       <Text>
         {label}

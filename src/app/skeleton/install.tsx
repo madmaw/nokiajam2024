@@ -3,6 +3,7 @@ import { action } from 'mobx';
 import { observer } from 'mobx-react';
 import { type Settings } from 'model/settings';
 import { type ComponentType } from 'react';
+import { GhostOverlay } from 'ui/ghost/ghost_overlay';
 import { type MaybeWithInput } from 'ui/input';
 import { Stack } from 'ui/stack/stack';
 
@@ -10,6 +11,7 @@ import {
   ContentController,
   ContentHolder,
 } from './content_controller';
+import { type OverlayController } from './overlay_controller';
 import { Skeleton } from './skeleton';
 
 export function install({
@@ -18,6 +20,7 @@ export function install({
   readonly settings: Settings,
 }): {
   contentController: ContentController,
+  overlayController: OverlayController,
   Skeleton: ComponentType<MaybeWithInput>,
 } {
 
@@ -36,6 +39,9 @@ export function install({
       };
     },
   );
+  const maybeOverlayController: {
+    forceUpdate: (() => void) | undefined,
+  } = { forceUpdate: undefined };
   const contentHolder = new ContentHolder();
   const contentController = new ContentController(contentHolder);
   const requestPop = action(function () {
@@ -48,17 +54,24 @@ export function install({
     const { screens } = contentHolder;
     return (
       <SkeletonWithTheme>
-        <Stack
-          screens={screens}
-          requestPop={requestPop}
-          input={input}
-          output={output}
-        />
+        <GhostOverlay forceUpdateContainer={maybeOverlayController}>
+          <Stack
+            screens={screens}
+            requestPop={requestPop}
+            input={input}
+            output={output}
+          />
+        </GhostOverlay>
       </SkeletonWithTheme>
     );
   });
   return {
     Skeleton: SkeletonWithThemeAndContent,
     contentController,
+    overlayController: {
+      forceUpdate: function () {
+        maybeOverlayController.forceUpdate?.();
+      },
+    },
   };
 }

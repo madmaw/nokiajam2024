@@ -13,7 +13,7 @@ import { install as installSkeleton } from './skeleton/install';
 import { install as installSplashScreen } from './splash/install';
 import { install as installUi } from './ui/install';
 
-const LoadingScreen: typeof Loading<void,ScreenComponentProps> = Loading;
+const LoadingScreen: typeof Loading<void, ScreenComponentProps> = Loading;
 
 export function install() {
   const {
@@ -29,16 +29,6 @@ export function install() {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 
   const {
-    SplashScreen,
-    splashScreenAnimationPromise,
-  } = installSplashScreen();
-
-  const initObservable = fromPromise(Promise.all([
-    fontLoadPromise,
-    splashScreenAnimationPromise,
-  ]));
-
-  const {
     InputInstaller,
     input,
   } = installInput();
@@ -47,6 +37,7 @@ export function install() {
   const {
     Skeleton,
     contentController,
+    overlayController,
   } = installSkeleton({
     settings,
   });
@@ -79,6 +70,18 @@ export function install() {
     );
   }
 
+  const {
+    SplashScreen,
+    splashScreenAnimationPromise,
+  } = installSplashScreen({
+    overlayController,
+  });
+
+  const initObservable = fromPromise(Promise.all([
+    fontLoadPromise,
+    splashScreenAnimationPromise,
+  ]));
+
   const LoadingHomeScreen = createPartialObserverComponent(
     LoadingScreen,
     function () {
@@ -99,12 +102,12 @@ export function install() {
   return function () {
     return (
       <>
-        <FontRulesRenderer />
         <InputInstaller />
         <Skeleton
           input={input}
           output={undefined}
         />
+        <FontRulesRenderer />
       </>
     );
   };

@@ -16,10 +16,9 @@ export function FontsRulesRenderer({
       <span
         style={{
           fontFamily: fontFamily,
-          display: 'none',
         }}
       >
-A
+Abc123
       </span>
       {fontFiles.map(function ({
         format, uri,

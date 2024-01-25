@@ -178,7 +178,7 @@ export function Skeleton({
         scale={scale}
       >
         <Spacer backlit={backlit}>
-          <Content >
+          <Content>
             {children}
           </Content>
           <ScanLines />

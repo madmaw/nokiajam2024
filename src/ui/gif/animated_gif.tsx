@@ -14,6 +14,7 @@ export type AnimatedGifProps = {
   onLoad?: () => void,
   onError?: (e: unknown) => void,
   onAnimationEnd?: () => void,
+  onFrame?: (index: number) => void,
   className?: string,
 };
 
@@ -21,6 +22,7 @@ export function AnimatedGif({
   src,
   onLoad,
   onError,
+  onFrame,
   onAnimationEnd,
   className,
 }: AnimatedGifProps) {
@@ -114,6 +116,7 @@ export function AnimatedGif({
         frame.dims.top,
       );
     }
+    onFrame?.(progress);
     const handle = setTimeout(function () {
       const nextProgress = progress + 1;
       if (nextProgress >= frames.length * loops) {
@@ -129,6 +132,7 @@ export function AnimatedGif({
     frames,
     progress,
     onAnimationEnd,
+    onFrame,
   ]);
 
   return (

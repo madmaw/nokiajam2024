@@ -13,10 +13,10 @@ export class FontFaceLoader {
   private async loadFontFace(fontFace: FontFace): Promise<void> {
     await fontFace.load();
     // // make sure it's actually loaded
-    // await fontFace.loaded;
+    await fontFace.loaded;
     // // really make sure
     // while (fontFace.status === 'loading') {
-    //   await delay(100);
+    //await delay(100);
     // }
   }
 }
