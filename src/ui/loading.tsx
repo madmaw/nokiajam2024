@@ -5,10 +5,10 @@ import { type ComponentType } from 'react';
 
 export type LoadingProps<T, C> = {
   observable: IPromiseBasedObservable<T>,
-  Pending: ComponentType,
+  Pending: ComponentType<C>,
   Rejected: ComponentType<{
     error: unknown,
-  }>,
+  } & C>,
   Fulfilled: ComponentType<{
     value: T,
   } & C>,
@@ -25,12 +25,16 @@ export const Loading = observer(function<T, C = {}>({
   switch (observable.state) {
     case 'pending':
       return (
-        <Pending/>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
+        <Pending {...common as any}/>
       );
     case 'rejected':
       return (
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        <Rejected error={observable.value}/>
+        <Rejected
+          error={observable.value}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-assertions
+          {...common as any}
+        />
       );
     case 'fulfilled':
       return (

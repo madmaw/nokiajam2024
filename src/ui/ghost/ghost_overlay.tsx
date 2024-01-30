@@ -14,11 +14,11 @@ import {
 } from 'react';
 
 export type GhostOverlayProps = PropsWithChildren<{
-  forceUpdateContainer: { forceUpdate: (() => void) | undefined },
+  forceUpdateContainer: { forceUpdate: ((canvas?: HTMLCanvasElement | OffscreenCanvas) => void) | undefined },
 }>;
 
-const alphaFilterName = 'alpha-filter';
 const transparencyFilterName = 'transparency-filter';
+const alphaThresholdFilterName = 'alpha-threshold-filter';
 
 const Container = styled.div`
   position: absolute;
@@ -32,20 +32,24 @@ const OverlayCanvas = styled.canvas`
   height: 100%;
   pointer-events: none;
   image-rendering: pixelated;
-  filter: url(#${alphaFilterName});
+  opacity: .5;
+  filter: url(#${alphaThresholdFilterName});
+  label: ghost-overlay-canvas;
 `;
 
 const ChildrenContainer = styled.div`
   position: absolute;
   width: 100%;
   height: 100%;
-  filter: url()(#${transparencyFilterName});
+  filter: url(#${transparencyFilterName});
+  label: ghost-overlay-container;
 `;
 
 function getAlpha(now: number, then: number) {
-  const MAX_FADE = 150;
+  // note: some of this duration is chopped off by the alpha threshold filter
+  const MAX_FADE = 300;
   const delta = Math.min(now - then, MAX_FADE);
-  return 1 - delta / MAX_FADE;
+  return Math.sqrt(1 - delta / MAX_FADE);
 }
 
 export function GhostOverlay({
@@ -68,7 +72,7 @@ export function GhostOverlay({
     return new OffscreenCanvas(renderWidth, renderHeight);
   }, []);
 
-  const captureWithDomToImage = useCallback(function () {
+  const captureWithDomToImage = useCallback(function (screenshot?: HTMLCanvasElement | OffscreenCanvas) {
     if (container == null) {
       return;
     }
@@ -84,18 +88,18 @@ export function GhostOverlay({
       return;
     }
     cctx.clearRect(0, 0, renderWidth, renderHeight);
-
-    const then = Date.now();
+    const captureCount = ++captureCountRef.current;
+    if (screenshot != null) {
+      cctx.drawImage(screenshot, 0, 0);
+      return;
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     (async function () {
-      const captureCount = ++captureCountRef.current;
       const pixelData = await domToImage.toPixelData(container, {
         width: renderWidth,
         height: renderHeight,
       });
-      const now = Date.now();
-      console.log('capture took', now - then);
 
       // render to canvas
       if (captureCount !== captureCountRef.current) {
@@ -121,7 +125,10 @@ export function GhostOverlay({
     if (container == null) {
       return;
     }
-    const observer = new MutationObserver(captureWithDomToImage);
+    const observer = new MutationObserver(function () {
+      // need to wrap in function as mutation observer has args
+      captureWithDomToImage();
+    });
     observer.observe(container, {
       childList: true,
       subtree: true,
@@ -170,8 +177,8 @@ export function GhostOverlay({
         height={0}
       >
         <defs>
-          {/* filter to hide alpha values under 10% */}
-          <filter id={alphaFilterName}>
+          {/* filter to hide alpha values under 30% */}
+          <filter id={alphaThresholdFilterName}>
             <feColorMatrix
               type='matrix'
               in='SourceGraphic'
@@ -183,7 +190,8 @@ export function GhostOverlay({
               `}
             />
           </filter>
-          {/* filter to hide alpha values under 10% */}
+
+          {/* filter to make red (white, given we only support two colors) transparent */}
           <filter id={transparencyFilterName}>
             <feColorMatrix
               type='matrix'

@@ -9,6 +9,7 @@ import { install as installFonts } from './fonts/install';
 import { install as installInput } from './input/install';
 import { install as installHome } from './screen/home/install';
 import { install as installSettings } from './screen/settings/install';
+import { install as installTestAnimation } from './screen/test_animation/install';
 import { install as installSkeleton } from './skeleton/install';
 import { install as installSplashScreen } from './splash/install';
 import { install as installUi } from './ui/install';
@@ -50,6 +51,10 @@ export function install() {
     settings,
   });
 
+  const { AnimationScreen } = installTestAnimation({
+    overlayController,
+  });
+
   const { SettingsScreen } = installSettings({
     TextMenu,
     contentController,
@@ -59,6 +64,7 @@ export function install() {
 
   const { HomeScreen } = installHome({
     TextMenu,
+    NewGameScreen: AnimationScreen,
     SettingsScreen,
     contentController,
   });

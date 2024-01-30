@@ -6,13 +6,14 @@ import {
 import { type MaybeWithInput } from 'ui/input';
 import { type ScreenComponent } from 'ui/stack/stack';
 
+const itemNewGame: TextMenuItem = {
+  label: 'New Game',
+};
 const itemSettings: TextMenuItem = {
   label: 'Settings',
 };
 const items: TextMenuItem[] = [
-  {
-    label: 'New Game',
-  },
+  itemNewGame,
   {
     label: 'Continue',
   },
@@ -24,10 +25,12 @@ const items: TextMenuItem[] = [
 
 export function install({
   TextMenu,
+  NewGameScreen,
   SettingsScreen,
   contentController,
 }: {
   TextMenu: TextMenuScreen,
+  NewGameScreen: ScreenComponent,
   SettingsScreen: ScreenComponent,
   contentController: ContentController,
 }) {
@@ -37,6 +40,12 @@ export function install({
         contentController.pushScreen({
           Component: SettingsScreen,
           key: 'settings',
+        });
+        break;
+      case itemNewGame:
+        contentController.pushScreen({
+          Component: NewGameScreen,
+          key: 'new_game',
         });
         break;
       default:

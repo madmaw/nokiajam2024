@@ -1,3 +1,5 @@
+import styled from '@emotion/styled';
+import { pxPerNpx } from 'base/metrics';
 import {
   decompressFrames,
   type ParsedFrame,
@@ -11,12 +13,17 @@ import {
 
 export type AnimatedGifProps = {
   src: string,
+  loop?: boolean,
   onLoad?: () => void,
   onError?: (e: unknown) => void,
   onAnimationEnd?: () => void,
-  onFrame?: (index: number) => void,
+  onFrame?: (canvas: HTMLCanvasElement, index: number) => void,
   className?: string,
 };
+
+const AnimatedGifCanvas = styled.canvas`
+  image-rendering: pixelated;
+`;
 
 export function AnimatedGif({
   src,
@@ -25,6 +32,7 @@ export function AnimatedGif({
   onFrame,
   onAnimationEnd,
   className,
+  loop,
 }: AnimatedGifProps) {
   const [
     frames,
@@ -35,6 +43,10 @@ export function AnimatedGif({
     setProgress,
   ] = useState<number>(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [
+    styledHeight,
+    setStyledHeight,
+  ] = useState<string | undefined>(undefined);
 
   useEffect(function () {
     let canceled = false;
@@ -57,6 +69,7 @@ export function AnimatedGif({
           canvas.width = gif.lsd.width;
           canvas.height = gif.lsd.height;
         }
+        setStyledHeight(`${gif.lsd.height * pxPerNpx}px`);
 
         setFrames(decompressFrames(gif, true));
         onLoad?.();
@@ -82,13 +95,16 @@ export function AnimatedGif({
     if (frames == null || canvas == null) {
       return;
     }
-    const loops = 1;
-    const frame = frames[progress % frames.length];
+    const index = progress % frames.length;
+    const frame = frames[index];
     const ctx = canvas.getContext('2d');
     if (ctx == null) {
       return;
     }
-    const replace = progress > 0 && frames[(progress - 1)%frames.length].disposalType === 2;
+    const previousIndex = index === 0
+      ? frames.length - 1
+      : index - 1;
+    const replace = frames[previousIndex].disposalType === 2;
     if (replace) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.imageSmoothingEnabled = false;
@@ -116,10 +132,10 @@ export function AnimatedGif({
         frame.dims.top,
       );
     }
-    onFrame?.(progress);
+    onFrame?.(canvas, progress);
     const handle = setTimeout(function () {
       const nextProgress = progress + 1;
-      if (nextProgress >= frames.length * loops) {
+      if (nextProgress >= frames.length && !loop) {
         onAnimationEnd?.();
       } else {
         setProgress(nextProgress % frames.length);
@@ -133,12 +149,16 @@ export function AnimatedGif({
     progress,
     onAnimationEnd,
     onFrame,
+    loop,
   ]);
 
   return (
-    <canvas
+    <AnimatedGifCanvas
       ref={canvasRef}
       className={className}
+      style={{
+        height: styledHeight,
+      }}
     />
   );
 }

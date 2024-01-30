@@ -17,7 +17,7 @@ import {
   useState,
 } from 'react';
 
-const scalelineThickness = `max(1px, calc(${npx} / 5))`;
+//const scanlineThickness = `calc(${npx} * .1)`;
 const scanlineHorizontalBreakpoint = '700px';
 const scanlineVerticalBreakpoint = '400px';
 const widthCalc = `(${screenWidth * pixelAspectRatio} * ${npx})`;
@@ -25,7 +25,7 @@ const heightCalc = `(${screenHeight} * ${npx})`;
 const filterName = 'skeleton-filter';
 const opaqueColor = '#000';
 
-const mediaQuery = `@media screen and (min-width: ${scanlineHorizontalBreakpoint}) and (min-height: ${scanlineVerticalBreakpoint})`;
+const bigScreenMediaQuery = `@media screen and (min-width: ${scanlineHorizontalBreakpoint}) and (min-height: ${scanlineVerticalBreakpoint})`;
 
 const Content = styled.div`
   position: absolute;
@@ -35,46 +35,54 @@ const Content = styled.div`
   overflow: hidden;
   transform: scaleX(${pixelAspectRatio});
   color: ${opaqueColor};
-  filter: blur(calc(.15 * ${npx}));
+  label: skeleton-content;
 `;
 
-const ScanLines = styled.div`
+const ScanLines = styled.div<{ scanlineThickness: string }>`
   position: absolute;
   pointer-events: none;
   width: 100%;
   height: 100%;
-  opacity: .5;
-  ${mediaQuery} {
+  //opacity: .5;
+  label: skeleton-scan-lines;
+  ${bigScreenMediaQuery} {
     background:
       repeating-linear-gradient(
-        ${transparency.toString({ format: 'hex' })},
-        transparent calc(${scalelineThickness}),
-        transparent calc(${npx} - ${scalelineThickness}),
+        ${transparency.toString({ format: 'hex' })} 0,
+        ${transparency.toString({ format: 'hex' })} ${({ scanlineThickness }) => scanlineThickness},
+        transparent ${({ scanlineThickness }) => scanlineThickness},
+        transparent calc(${npx} - ${({ scanlineThickness }) => scanlineThickness}),
+        ${transparency.toString({ format: 'hex' })} calc(${npx} - ${({ scanlineThickness }) => scanlineThickness}),
         ${transparency.toString({ format: 'hex' })} ${npx}
       ),
       repeating-linear-gradient(
         90deg,
-        ${transparency.toString({ format: 'hex' })},
-        transparent calc(${scalelineThickness}),
-        transparent calc(${npx} * ${pixelAspectRatio} - ${scalelineThickness}),
+        ${transparency.toString({ format: 'hex' })} 0,
+        ${transparency.toString({ format: 'hex' })} ${({ scanlineThickness }) => scanlineThickness},
+        transparent ${({ scanlineThickness }) => scanlineThickness},
+        transparent calc(${npx} * ${pixelAspectRatio} - ${({ scanlineThickness }) => scanlineThickness}),
+        ${transparency.toString({ format: 'hex' })} calc(${npx} * ${pixelAspectRatio} - ${({ scanlineThickness }) => scanlineThickness}),
         ${transparency.toString({ format: 'hex' })} calc(${npx} * ${pixelAspectRatio})
       );
   }
 `;
 
-const Spacer = styled.div<{ backlit: boolean }>`
+const Spacer = styled.div<{ backlit: boolean, scanlineThickness: string }>`
   position: absolute;
   left: calc((100vw - ${widthCalc}) / 2);
   top: calc((100vh - ${heightCalc}) / 2);
   width: calc(${widthCalc});
   height: calc(${heightCalc});
+  label: skeleton-spacer;
   filter:
+    blur(calc(.2 * ${npx}))
     url(#${filterName})
-    ${({ backlit }) => !backlit && `blur(calc(.05 * ${npx})) drop-shadow(0 calc(${npx}/3) calc(${npx}/2) rgba(0, 0, 0, 0.5))`};
-  ${mediaQuery} {
+    ${({ backlit }) => backlit ? `blur(calc(.1 * ${npx}))` : `blur(calc(.05 * ${npx})) drop-shadow(0 calc(${npx}/3) calc(${npx}/2) rgba(0, 0, 0, 0.5))`};
+  ${bigScreenMediaQuery} {
     filter:
+      blur(calc(${({ scanlineThickness }) => scanlineThickness} * 2))
       url(#${filterName})
-      ${({ backlit }) => !backlit && `blur(calc(.03 * ${npx})) drop-shadow(0 calc(${npx}/3) calc(${npx}/2) rgba(0, 0, 0, 0.5))`};
+      ${({ backlit }) => backlit ? `blur(calc(.1 * ${npx}))` : `blur(calc(.03 * ${npx})) drop-shadow(0 calc(${npx}/3) calc(${npx}/2) rgba(0, 0, 0, 0.5))`};
   }
 
 `;
@@ -87,6 +95,7 @@ const Container = styled.div<{ background: Color, scale: number }>`
   height: 100%;
   transform: ${({ scale }) => `scale(${Math.max(1, Math.floor(scale * 2)/2)})`};
   background-color: ${({ background }) => background.toString({ format: 'hex' })};
+  label: skeleton-container;
 `;
 
 const Overlay = styled.div`
@@ -95,6 +104,7 @@ const Overlay = styled.div`
   height: 100%;
   background: radial-gradient(circle at center, transparent 0, transparent 10vmax, #000000 35vmax);
   pointer-events: none;
+  label: skeleton-overlay;
 `;
 
 export function Skeleton({
@@ -112,6 +122,7 @@ export function Skeleton({
     setScale,
   ] = useState<number>(1);
   const contentRef = useRef<HTMLDivElement>(null);
+  const scanlineThickness = `${pxPerNpx * .1}px`;
 
   const maybeFirePixelDimensionChange = useCallback(function () {
     if (contentRef.current == null) {
@@ -148,20 +159,8 @@ export function Skeleton({
       >
         <defs>
           <filter id={filterName}>
-            <feGaussianBlur
-              in='SourceGraphic'
-              stdDeviation='2'
-              result='blurred'
-            />
-            <feBlend
-              in='SourceGraphic'
-              in2='blurred'
-              result='combined'
-              mode='lighten'
-            />
             <feColorMatrix
               type='matrix'
-              in={backlit ? 'combined' : 'SourceGraphic'}
               values={`
                 0 0 0 ${rgb[0]} 0
                 0 0 0 ${rgb[1]} 0
@@ -177,11 +176,14 @@ export function Skeleton({
         background={background}
         scale={scale}
       >
-        <Spacer backlit={backlit}>
+        <Spacer
+          backlit={backlit}
+          scanlineThickness={scanlineThickness}
+        >
           <Content>
             {children}
           </Content>
-          <ScanLines />
+          <ScanLines scanlineThickness={scanlineThickness }/>
         </Spacer>
         <Overlay />
       </Container>
