@@ -15,11 +15,11 @@ import {
 } from 'ui/stack/stack';
 
 import clownUrl from './resources/clown.gif';
-import frogUrl from './resources/frog.gif';
 import ninjaUrl from './resources/ninja.gif';
+import pogoDogUrl from './resources/pogo_dog.gif';
 
 const urls = [
-  frogUrl,
+  pogoDogUrl,
   ninjaUrl,
   clownUrl,
 ];

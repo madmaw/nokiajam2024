@@ -20,89 +20,95 @@ import {
 //const scanlineThickness = `calc(${npx} * .1)`;
 const scanlineHorizontalBreakpoint = '700px';
 const scanlineVerticalBreakpoint = '400px';
-const widthCalc = `(${screenWidth * pixelAspectRatio} * ${npx})`;
+const widthCalc = `(${screenWidth} * ${npx})`;
 const heightCalc = `(${screenHeight} * ${npx})`;
 const filterName = 'skeleton-filter';
 const opaqueColor = '#000';
 
 const bigScreenMediaQuery = `@media screen and (min-width: ${scanlineHorizontalBreakpoint}) and (min-height: ${scanlineVerticalBreakpoint})`;
 
-const Content = styled.div`
-  position: absolute;
-  width: ${100 / pixelAspectRatio}%;
-  height: 100%;
-  left: calc((100% - ${100/pixelAspectRatio}%)/2);
-  overflow: hidden;
-  transform: scaleX(${pixelAspectRatio});
-  color: ${opaqueColor};
+const Content = styled.div<{ scaleBy: number }>`
   label: skeleton-content;
-`;
-
-const ScanLines = styled.div<{ scanlineThickness: string }>`
-  position: absolute;
-  pointer-events: none;
-  width: 100%;
-  height: 100%;
-  //opacity: .5;
-  label: skeleton-scan-lines;
-  ${bigScreenMediaQuery} {
-    background:
-      repeating-linear-gradient(
-        ${transparency.toString({ format: 'hex' })} 0,
-        ${transparency.toString({ format: 'hex' })} ${({ scanlineThickness }) => scanlineThickness},
-        transparent ${({ scanlineThickness }) => scanlineThickness},
-        transparent calc(${npx} - ${({ scanlineThickness }) => scanlineThickness}),
-        ${transparency.toString({ format: 'hex' })} calc(${npx} - ${({ scanlineThickness }) => scanlineThickness}),
-        ${transparency.toString({ format: 'hex' })} ${npx}
-      ),
-      repeating-linear-gradient(
-        90deg,
-        ${transparency.toString({ format: 'hex' })} 0,
-        ${transparency.toString({ format: 'hex' })} ${({ scanlineThickness }) => scanlineThickness},
-        transparent ${({ scanlineThickness }) => scanlineThickness},
-        transparent calc(${npx} * ${pixelAspectRatio} - ${({ scanlineThickness }) => scanlineThickness}),
-        ${transparency.toString({ format: 'hex' })} calc(${npx} * ${pixelAspectRatio} - ${({ scanlineThickness }) => scanlineThickness}),
-        ${transparency.toString({ format: 'hex' })} calc(${npx} * ${pixelAspectRatio})
-      );
-  }
-`;
-
-const Spacer = styled.div<{ backlit: boolean, scanlineThickness: string }>`
   position: absolute;
   left: calc((100vw - ${widthCalc}) / 2);
   top: calc((100vh - ${heightCalc}) / 2);
   width: calc(${widthCalc});
   height: calc(${heightCalc});
-  label: skeleton-spacer;
-  filter:
-    blur(calc(.2 * ${npx}))
-    url(#${filterName})
-    ${({ backlit }) => backlit ? `blur(calc(.1 * ${npx}))` : `blur(calc(.05 * ${npx})) drop-shadow(0 calc(${npx}/3) calc(${npx}/2) rgba(0, 0, 0, 0.5))`};
-  ${bigScreenMediaQuery} {
-    filter:
-      blur(calc(${({ scanlineThickness }) => scanlineThickness} * 2))
-      url(#${filterName})
-      ${({ backlit }) => backlit ? `blur(calc(.1 * ${npx}))` : `blur(calc(.03 * ${npx})) drop-shadow(0 calc(${npx}/3) calc(${npx}/2) rgba(0, 0, 0, 0.5))`};
-  }
-
+  overflow: hidden;
+  transform: ${({ scaleBy }) => `scale(${scaleBy})`} scaleX(${pixelAspectRatio});
+  transform-origin: center;
+  color: ${opaqueColor};
 `;
 
-const Container = styled.div<{ background: Color, scale: number }>`
+const unscaledScanlineThickness = .4;
+
+const ScanLines = styled.div<{ scaleBy: number }>`
+  label: skeleton-scan-lines;
+  position: absolute;
+  pointer-events: none;
+  left: calc((100vw - ${widthCalc} * ${({ scaleBy }) => scaleBy * pixelAspectRatio}) / 2);
+  top: calc((100vh - ${heightCalc} * ${({ scaleBy }) => scaleBy}) / 2);
+  width: calc(${widthCalc} * ${({ scaleBy }) => scaleBy * pixelAspectRatio});
+  height: calc(${heightCalc} * ${({ scaleBy }) => scaleBy});
+  //opacity: .5;
+  ${bigScreenMediaQuery} {
+    background:
+      // horizontal scan lines (spaced vertically)
+      repeating-linear-gradient(
+        ${transparency.toString({ format: 'hex' })} 0,
+        ${transparency.toString({ format: 'hex' })} ${({ scaleBy }) => `${unscaledScanlineThickness/2 * scaleBy}px`},
+        transparent ${({ scaleBy }) => `${unscaledScanlineThickness * scaleBy}px`},
+        transparent ${({ scaleBy }) => `${(pxPerNpx - unscaledScanlineThickness) * scaleBy}px`},
+        ${transparency.toString({ format: 'hex' })} ${({ scaleBy }) => `${(pxPerNpx - unscaledScanlineThickness/2) * scaleBy}px`},
+        ${transparency.toString({ format: 'hex' })} ${({ scaleBy }) => `${pxPerNpx * scaleBy}px`}
+      ),
+      // vertical scan lines (spaced horizontally)
+      repeating-linear-gradient(
+        90deg,
+        ${transparency.toString({ format: 'hex' })} 0,
+        ${transparency.toString({ format: 'hex' })} ${({ scaleBy }) => `${unscaledScanlineThickness/2 * scaleBy}px`},
+        transparent ${({ scaleBy }) => `${unscaledScanlineThickness * scaleBy}px`},
+        transparent ${({ scaleBy }) => `${(pxPerNpx * pixelAspectRatio - unscaledScanlineThickness) * scaleBy}px`},
+        ${transparency.toString({ format: 'hex' })} ${({ scaleBy }) => `${(pxPerNpx * pixelAspectRatio - unscaledScanlineThickness/2) * scaleBy}px`},
+        ${transparency.toString({ format: 'hex' })} ${({ scaleBy }) => `${(pxPerNpx * pixelAspectRatio ) * scaleBy}px`}
+      );
+  }
+`;
+
+const FilterContainer = styled.div<{ backlit: boolean, scaleBy: number }>`
+  label: skeleton-filter-container;
+  position: absolute;
+  filter:
+    blur(${({ scaleBy }) => `${.5 * scaleBy}px`})
+    url(#${filterName})
+    ${({
+    backlit, scaleBy,
+  }) => !backlit && `drop-shadow(0 ${.4 * scaleBy}px ${.6 * scaleBy}px rgba(0, 0, 0, 0.5))`};
+  ${bigScreenMediaQuery} {
+    filter:
+      blur(${({ scaleBy }) => `${.6 * scaleBy}px`})
+      url(#${filterName})
+      ${({
+    backlit, scaleBy,
+  }) => !backlit && `drop-shadow(0 ${1 * scaleBy}px ${2 * scaleBy}px rgba(20, 0, 10, 0.7))`};
+  }
+`;
+
+const Container = styled.div<{ background: Color }>`
+  label: skeleton-container;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  transform: ${({ scale }) => `scale(${Math.max(1, Math.floor(scale * 2)/2)})`};
   background-color: ${({ background }) => background.toString({ format: 'hex' })};
-  label: skeleton-container;
 `;
 
 const Overlay = styled.div`
   position: absolute;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at center, transparent 0, transparent 10vmax, #000000 35vmax);
+  background: radial-gradient(circle at center, transparent 0, transparent 30vmax, #000000 80vmax);
   pointer-events: none;
   label: skeleton-overlay;
 `;
@@ -122,7 +128,6 @@ export function Skeleton({
     setScale,
   ] = useState<number>(1);
   const contentRef = useRef<HTMLDivElement>(null);
-  const scanlineThickness = `${pxPerNpx * .1}px`;
 
   const maybeFirePixelDimensionChange = useCallback(function () {
     if (contentRef.current == null) {
@@ -136,7 +141,8 @@ export function Skeleton({
       (clientWidth * .95) / (pxPerNpx * screenWidth * pixelAspectRatio),
       (clientHeight * .95) / (pxPerNpx * screenHeight),
     );
-    setScale(scale);
+    const roundedScale = Math.max(1, Math.floor(scale * 2) / 2);
+    setScale(roundedScale);
   }, [setScale]);
 
   useEffect(function () {
@@ -161,6 +167,29 @@ export function Skeleton({
           <filter id={filterName}>
             <feColorMatrix
               type='matrix'
+              in='SourceGraphic'
+              result='opaque'
+              values={`
+                1 0 0 -1 1
+                0 1 0 -1 1
+                0 0 1 -1 1
+                0 0 0  0 1
+              `}
+            />
+            <feGaussianBlur
+              in='opaque'
+              stdDeviation={scale * 1.5}
+              result='blurred'
+            />
+            <feBlend
+              in='opaque'
+              in2='blurred'
+              result='lightened'
+              mode='lighten'
+            />
+            <feColorMatrix
+              type='matrix'
+              in={backlit ? 'lightened' : 'opaque'}
               values={`
                 0 0 0 ${rgb[0]} 0
                 0 0 0 ${rgb[1]} 0
@@ -174,17 +203,18 @@ export function Skeleton({
       <Container
         ref={contentRef}
         background={background}
-        scale={scale}
       >
-        <Spacer
+        <FilterContainer
           backlit={backlit}
-          scanlineThickness={scanlineThickness}
+          scaleBy={scale}
         >
-          <Content>
+          <Content scaleBy={scale}>
             {children}
           </Content>
-          <ScanLines scanlineThickness={scanlineThickness }/>
-        </Spacer>
+          <ScanLines
+            scaleBy={scale}
+          />
+        </FilterContainer>
         <Overlay />
       </Container>
 

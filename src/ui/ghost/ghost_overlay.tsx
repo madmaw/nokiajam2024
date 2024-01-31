@@ -21,12 +21,14 @@ const transparencyFilterName = 'transparency-filter';
 const alphaThresholdFilterName = 'alpha-threshold-filter';
 
 const Container = styled.div`
+  label: ghost-overlay-container;
   position: absolute;
   width: 100%;
   height: 100%;
 `;
 
 const OverlayCanvas = styled.canvas`
+  label: ghost-overlay-canvas;
   position: absolute;
   width: 100%;
   height: 100%;
@@ -34,20 +36,19 @@ const OverlayCanvas = styled.canvas`
   image-rendering: pixelated;
   opacity: .5;
   filter: url(#${alphaThresholdFilterName});
-  label: ghost-overlay-canvas;
 `;
 
 const ChildrenContainer = styled.div`
+  label: ghost-overlay-child-container;
   position: absolute;
   width: 100%;
   height: 100%;
   filter: url(#${transparencyFilterName});
-  label: ghost-overlay-container;
 `;
 
 function getAlpha(now: number, then: number) {
   // note: some of this duration is chopped off by the alpha threshold filter
-  const MAX_FADE = 300;
+  const MAX_FADE = 200;
   const delta = Math.min(now - then, MAX_FADE);
   return Math.sqrt(1 - delta / MAX_FADE);
 }
