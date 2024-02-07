@@ -1,5 +1,6 @@
 import { type OverlayController } from 'app/skeleton/overlay_controller';
 import {
+  useCallback,
   useEffect,
   useState,
 } from 'react';
@@ -68,9 +69,14 @@ export function install({
       requestPop,
       gifIndex,
     ]);
+
+    const onFrame = useCallback(function (canvas: HTMLCanvasElement) {
+      overlayController.forceUpdate(canvas);
+    }, []);
+
     return (
       <AnimatedGif
-        onFrame={overlayController.forceUpdate}
+        onFrame={onFrame}
         src={gifUrl}
         loop={true}
       />

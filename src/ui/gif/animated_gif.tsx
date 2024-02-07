@@ -71,7 +71,8 @@ export function AnimatedGif({
         }
         setStyledHeight(`${gif.lsd.height * pxPerNpx}px`);
 
-        setFrames(decompressFrames(gif, true));
+        const frames = decompressFrames(gif, true);
+        setFrames(frames.length > 6 ? frames.slice(0) : frames);
         onLoad?.();
       } catch (e) {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition

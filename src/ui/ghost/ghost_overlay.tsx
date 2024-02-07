@@ -1,5 +1,6 @@
 import styled from '@emotion/styled';
 import {
+  pxPerNpx,
   renderHeight,
   renderWidth,
 } from 'base/metrics';
@@ -91,7 +92,8 @@ export function GhostOverlay({
     cctx.clearRect(0, 0, renderWidth, renderHeight);
     const captureCount = ++captureCountRef.current;
     if (screenshot != null) {
-      cctx.drawImage(screenshot, 0, 0);
+      cctx.imageSmoothingEnabled = false;
+      cctx.drawImage(screenshot, 0, 0, screenshot.width * pxPerNpx, screenshot.height * pxPerNpx);
       return;
     }
 

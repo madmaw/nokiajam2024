@@ -1,8 +1,9 @@
-import { createPartialObserverComponent } from 'base/react/partial';
+import { createPartialComponent } from 'base/react/partial';
 import { type ComponentType } from 'react';
 
 import { type ButtonProps } from '../button/types';
 import { type Text } from '../typography/types';
+import { TextMenuItemComponent } from './text_menu_item';
 import { TextMenuScreenImpl } from './text_menu_screen';
 import {
   type TextMenuItem,
@@ -13,30 +14,30 @@ export function install({
   Button,
   TitleText,
   FooterText,
+  CheckIcon,
 }: {
   Button: ComponentType<ButtonProps>,
   TitleText: Text,
   FooterText: Text,
+    CheckIcon: ComponentType,
 }): {
     TextMenu: TextMenuScreen,
 } {
-  const TextMenuItemImpl = createPartialObserverComponent(Button, function () {
-    return {
-      stretch: true,
-    };
+  const TextMenuItemImpl = createPartialComponent(TextMenuItemComponent, {
+    stretch: true,
+    Button,
+    CheckIcon,
   });
 
-  const CurriedTextMenu: TextMenuScreen = createPartialObserverComponent(
+  const CurriedTextMenu: TextMenuScreen = createPartialComponent(
     TextMenuScreenImpl,
-    function () {
-      return {
-        MenuItem: TextMenuItemImpl,
-        keyFactory: function ({ label }: TextMenuItem) {
-          return label;
-        },
-        FooterText,
-        TitleText,
-      };
+    {
+      MenuItem: TextMenuItemImpl,
+      keyFactory: function ({ label }: TextMenuItem) {
+        return label;
+      },
+      FooterText,
+      TitleText,
     },
   );
 

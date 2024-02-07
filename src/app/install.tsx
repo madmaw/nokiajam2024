@@ -26,8 +26,6 @@ export function install() {
     fontLoadPromise,
     FontRulesRenderer,
   } = installFonts();
-  // weird eslint error
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 
   const {
     InputInstaller,
@@ -47,6 +45,7 @@ export function install() {
     Button,
     Text,
     TextMenu,
+    iconPromise,
   } = installUi({
     settings,
   });
@@ -86,6 +85,7 @@ export function install() {
   const initObservable = fromPromise(Promise.all([
     fontLoadPromise,
     splashScreenAnimationPromise,
+    iconPromise,
   ]));
 
   const LoadingHomeScreen = createPartialObserverComponent(

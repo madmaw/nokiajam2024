@@ -24,6 +24,7 @@ const widthCalc = `(${screenWidth} * ${npx})`;
 const heightCalc = `(${screenHeight} * ${npx})`;
 const filterName = 'skeleton-filter';
 const opaqueColor = '#000';
+const transitionDuration = '1s';
 
 const bigScreenMediaQuery = `@media screen and (min-width: ${scanlineHorizontalBreakpoint}) and (min-height: ${scanlineVerticalBreakpoint})`;
 
@@ -50,7 +51,6 @@ const ScanLines = styled.div<{ scaleBy: number }>`
   top: calc((100vh - ${heightCalc} * ${({ scaleBy }) => scaleBy}) / 2);
   width: calc(${widthCalc} * ${({ scaleBy }) => scaleBy * pixelAspectRatio});
   height: calc(${heightCalc} * ${({ scaleBy }) => scaleBy});
-  //opacity: .5;
   ${bigScreenMediaQuery} {
     background:
       // horizontal scan lines (spaced vertically)
@@ -78,12 +78,14 @@ const ScanLines = styled.div<{ scaleBy: number }>`
 const FilterContainer = styled.div<{ backlit: boolean, scaleBy: number }>`
   label: skeleton-filter-container;
   position: absolute;
+  transition-property: filter;
+  transition-duration: ${transitionDuration};
   filter:
     blur(${({ scaleBy }) => `${.5 * scaleBy}px`})
     url(#${filterName})
     ${({
     backlit, scaleBy,
-  }) => !backlit && `drop-shadow(0 ${.4 * scaleBy}px ${.6 * scaleBy}px rgba(0, 0, 0, 0.5))`};
+  }) => !backlit && `drop-shadow(0 ${1 * scaleBy}px ${2 * scaleBy}px rgba(20, 0, 10, 0.7))`};
   ${bigScreenMediaQuery} {
     filter:
       blur(${({ scaleBy }) => `${.6 * scaleBy}px`})
@@ -102,6 +104,8 @@ const Container = styled.div<{ background: Color }>`
   width: 100%;
   height: 100%;
   background-color: ${({ background }) => background.toString({ format: 'hex' })};
+  transition-property: background-color;
+  transition-duration: ${transitionDuration};
 `;
 
 const Overlay = styled.div`
@@ -178,7 +182,7 @@ export function Skeleton({
             />
             <feGaussianBlur
               in='opaque'
-              stdDeviation={scale * 1.5}
+              stdDeviation={scale * 1.2}
               result='blurred'
             />
             <feBlend

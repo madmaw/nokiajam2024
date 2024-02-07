@@ -50,12 +50,14 @@ const Item = styled.li`
   list-style-type: none;
 `;
 
+export type MenuItemProps<T> = MaybeWithInput<{
+  readonly selected: boolean,
+  readonly onClick: () => void,
+} & T>;
+
 export type MenuProps<T> = MaybeWithInput<{
   readonly items: readonly T[],
-  readonly MenuItem: ComponentType<MaybeWithInput<{
-    readonly selected: boolean,
-    readonly onClick: () => void,
-  } & T>>,
+  readonly MenuItem: ComponentType<MenuItemProps<T>>,
   readonly keyFactory: (item: T) => Key,
   readonly selectedItemIndex: number | undefined,
   readonly selectItemIndex?: (index: number) => void,

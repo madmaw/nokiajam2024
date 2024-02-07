@@ -1,3 +1,3 @@
 export type OverlayController = {
-  forceUpdate: () => void,
+  forceUpdate: (canvas?: OffscreenCanvas | HTMLCanvasElement) => void,
 };

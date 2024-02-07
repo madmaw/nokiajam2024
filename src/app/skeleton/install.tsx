@@ -40,7 +40,7 @@ export function install({
     },
   );
   const maybeOverlayController: {
-    forceUpdate: (() => void) | undefined,
+    forceUpdate: ((canvas?: HTMLCanvasElement | OffscreenCanvas) => void) | undefined,
   } = { forceUpdate: undefined };
   const contentHolder = new ContentHolder();
   const contentController = new ContentController(contentHolder);
@@ -69,8 +69,8 @@ export function install({
     Skeleton: SkeletonWithThemeAndContent,
     contentController,
     overlayController: {
-      forceUpdate: function () {
-        maybeOverlayController.forceUpdate?.();
+      forceUpdate: function (canvas?: HTMLCanvasElement | OffscreenCanvas) {
+        maybeOverlayController.forceUpdate?.(canvas);
       },
     },
   };

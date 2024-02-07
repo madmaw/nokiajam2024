@@ -21,7 +21,8 @@ import {
 } from './input';
 
 export type ButtonProps = MaybeWithInput<{
-  readonly label: string,
+  readonly label?: string,
+  readonly Icon?: React.ComponentType<{ invert?: boolean }>,
   readonly Text: React.ComponentType<PropsWithChildren>,
   readonly stretch?: boolean,
   readonly onClick?: () => void,
@@ -36,10 +37,13 @@ const UnstyledButton = styled.button<{
   selected: boolean,
   stretch: boolean,
 }>`
+  label: button-unstyled;
+  display: flex;
+  flex-direction: row;
   border: none;
   outline: none;
   margin: 0;
-  padding: ${npx} 0 ${npx} calc(${inset} * ${npx});
+  padding: 0;
   overflow: hidden;
   text-size-adjust: none;
   text-align: start;
@@ -51,8 +55,21 @@ const UnstyledButton = styled.button<{
   }
 `;
 
+const TextContainer = styled.div`
+  label: button-text;
+  flex: 1;
+  padding: ${npx} 0 ${npx} calc(${inset} * ${npx});
+`;
+const IconContainer = styled.div`
+  label: button-icon;
+  flex: 0;
+  padding-right: ${npx};
+  padding-top: ${npx};
+`;
+
 export function Button({
   label,
+  Icon,
   Text,
   stretch = false,
   input,
@@ -136,9 +153,18 @@ export function Button({
       stretch={stretch}
       tabIndex={-1}
     >
-      <Text>
-        {label}
-      </Text>
+      {label && (
+        <TextContainer>
+          <Text>
+            {label}
+          </Text>
+        </TextContainer>
+      )}
+      {Icon && (
+        <IconContainer>
+          <Icon invert={selected}/>
+        </IconContainer>
+      )}
     </UnstyledButton>
   );
 }

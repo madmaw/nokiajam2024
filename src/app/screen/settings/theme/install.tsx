@@ -3,6 +3,7 @@ import {
   type TextMenuScreen,
 } from 'app/ui/menu/types';
 import { runInAction } from 'mobx';
+import { observer } from 'mobx-react';
 import { type Settings } from 'model/settings';
 import { type ColorScheme } from 'ui/color_scheme';
 import { type ScreenComponentProps } from 'ui/stack/stack';
@@ -17,13 +18,6 @@ export function install({
   settings: Settings,
 }) {
 
-  const colorSchemeItems: TextMenuItem[] = colorSchemes.map(function (colorScheme) {
-    return {
-      label: colorScheme.name,
-    };
-  }, []);
-  const items = colorSchemeItems;
-
   function Footer() {
     return (<>Use Theme</>);
   }
@@ -34,11 +28,18 @@ export function install({
     });
   }
 
-  function ThemeScreen({
+  const ThemeScreen = observer(function ({
     input,
     output,
     requestPop,
   }: ScreenComponentProps) {
+
+    const items: TextMenuItem[] = colorSchemes.map(function (colorScheme) {
+      return {
+        label: colorScheme.name,
+        checked: colorScheme === settings.colorScheme,
+      };
+    }, []);
 
     return (
       <TextMenu
@@ -52,7 +53,7 @@ export function install({
         requestBack={requestPop}
       />
     );
-  }
+  });
 
   return {
     ThemeScreen,
