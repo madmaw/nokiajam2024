@@ -4,13 +4,14 @@ import { type DefinedKeys } from 'base/types';
 import {
   type State,
   type Transition,
+  type TransitionApplicator,
   type TransitionResult,
 } from './types';
 
 export class TransitionBuilder<V, E, O> {
   constructor(
     readonly target: StateBuilder<V, E, O>,
-    readonly apply: (event: E, owner: O) => TransitionResult,
+    readonly apply: TransitionApplicator<V, E, O>,
     readonly priority: number,
   ) { }
 }
@@ -21,7 +22,7 @@ export class StateBuilder<V, E, O, K extends DefinedKeys<V> = DefinedKeys<V>> {
   private readonly transitions: TransitionBuilder<V, E, O>[] = [];
   private readonly parents: StateBuilder<V, E, O>[] = [];
   private readonly state: Partial<MutableState<V, E, O>>;
-  knownChildren: StateBuilder<V, E, O>[] = [];
+  children: StateBuilder<V, E, O>[] = [];
 
   constructor(
     readonly value: Partial<V>,
@@ -30,14 +31,14 @@ export class StateBuilder<V, E, O, K extends DefinedKeys<V> = DefinedKeys<V>> {
     this.state = {};
   }
 
-  addTransition(target: StateBuilder<V, E, O>, apply: (event: E, owner: O) => TransitionResult, priority = 1): this {
+  addTransition(target: StateBuilder<V, E, O>, apply: (event: E, owner: O, state: V) => TransitionResult, priority = 1): this {
     this.transitions.push(new TransitionBuilder(target, apply, priority));
     return this;
   }
 
   addTransitionAcrossAttributes<K extends keyof V>(
     target: StateBuilder<V, E, O>,
-    apply: (event: E, owner: O, attributeValues: Record<K, V[K]>) => TransitionResult,
+    apply: (event: E, owner: O, toValue: V, attributeValues: Record<K, V[K]>) => TransitionResult,
     attributes: ReadonlySet<K>,
     priority?: number,
   ): this {
@@ -47,13 +48,14 @@ export class StateBuilder<V, E, O, K extends DefinedKeys<V> = DefinedKeys<V>> {
     // match up the specific values of those attributes and create a transition for each
     for (const fromState of from) {
       for (const toState of to) {
-        if ([...attributes].every((attribute) => fromState.populatedValue[attribute] === toState.populatedValue[attribute])) {
-          fromState.addTransition(toState, function (e, o) {
+        if ([...attributes].every((attribute) => fromState.inheritedValue[attribute] === toState.inheritedValue[attribute])) {
+          fromState.addTransition(toState, function (e, o, v) {
             return apply(
               e,
               o,
+              v,
               // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-              fromState.populatedValue as Record<K, V[K]>,
+              fromState.inheritedValue as Record<K, V[K]>,
             );
           }, priority);
         }
@@ -72,28 +74,28 @@ export class StateBuilder<V, E, O, K extends DefinedKeys<V> = DefinedKeys<V>> {
     if (subtractedAttributes.size === 0) {
       return [this];
     }
-    return this.knownChildren.flatMap((child) => child.findChildrenWithAttributesSet(subtractedAttributes));
+    return this.children.flatMap((child) => child.findChildrenWithAttributesSet(subtractedAttributes));
   }
 
   createChild(value: Partial<V>): StateBuilder<V, E, O> {
     const state = new StateBuilder<V, E, O>(value, this.requiredKeys);
-    this.knownChildren.push(state);
+    this.children.push(state);
     state.parents.push(this);
     return state;
   }
 
   addChild(state: StateBuilder<V, E, O>): this {
-    this.knownChildren.push(state);
+    this.children.push(state);
     state.parents.push(this);
     return this;
   }
 
-  private get populatedValue(): V {
-    const parentValues = this.parents.map((parent) => parent.populatedValue);
+  private get inheritedValue(): V {
+    const parentValues = this.parents.map((parent) => parent.inheritedValue);
     const value = parentValues.reduce(
       (value, parentValue) => ({
-        ...value,
         ...parentValue,
+        ...value,
       }),
       { ...this.value },
     );
@@ -103,10 +105,10 @@ export class StateBuilder<V, E, O, K extends DefinedKeys<V> = DefinedKeys<V>> {
 
   // eslint-disable-next-line @typescript-eslint/prefer-return-this-type
   private get firstLeafChild(): StateBuilder<V, E, O> {
-    if (this.knownChildren.length === 0) {
+    if (this.children.length === 0) {
       return this;
     } else {
-      return this.knownChildren[0].firstLeafChild;
+      return this.children[0].firstLeafChild;
     }
   }
 
@@ -135,7 +137,7 @@ export class StateBuilder<V, E, O, K extends DefinedKeys<V> = DefinedKeys<V>> {
   }
 
   private populateState(): State<V, E, O> {
-    const value = this.populatedValue;
+    const value = this.inheritedValue;
     for (const key in this.requiredKeys) {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any
       if (this.requiredKeys[key] === true && value[key as any as keyof V] === undefined) {
@@ -150,10 +152,10 @@ export class StateBuilder<V, E, O, K extends DefinedKeys<V> = DefinedKeys<V>> {
   }
 
   flatten(): readonly State<V, E, O>[] {
-    if (this.knownChildren.length === 0) {
+    if (this.children.length === 0) {
       return [this.populateState()];
     } else {
-      return this.knownChildren.flatMap((child) => child.flatten());
+      return this.children.flatMap((child) => child.flatten());
     }
   }
 }

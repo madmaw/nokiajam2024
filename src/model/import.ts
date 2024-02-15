@@ -14,7 +14,8 @@ import {
   type Entity,
   type EntityStateValue,
   type EntityTransition,
-  EntityTransitionFrameAnimated,
+  type EntityTransitionApplicator,
+  EntityTransitionType,
   LateralDirection,
   type Orientation,
   OrientationCardinalEast,
@@ -114,19 +115,33 @@ export type Importer = (
   groups: AnimationFrameGroup[],
 ) => EntityStateBuilder[];
 
-export function createApplyWhenFrameCompleted(applicator: TransitionApplicator<EntityTransition, Entity>): TransitionApplicator<EntityTransition, Entity> {
-  return function (e, o) {
-    return o.ticksRemaining <= 0
-      ? applicator(e, o)
-      : TransitionResult.TryNext;
+export function createApplyWhenFrameCompleted(applicator: TransitionApplicator<EntityStateValue, EntityTransition, Entity>): EntityTransitionApplicator {
+  return function (e, o, s) {
+    return e.type === EntityTransitionType.Update && e.frameComplete
+      ? applicator(e, o, s)
+      : TransitionResult.Continue;
 
   };
 }
 
-export const applyFrameAnimated = createApplyWhenFrameCompleted(function (e: EntityTransition) {
-  return e === EntityTransitionFrameAnimated
-    ? TransitionResult.Transition
-    : TransitionResult.Abort;
+export function createApplyWhenDifferentFrameGroup(applicator: EntityTransitionApplicator): EntityTransitionApplicator {
+  return function (e, o, v) {
+    return o.state.value.frameGroupId !== v.frameGroupId
+      ? applicator(e, o, v)
+      : TransitionResult.Continue;
+  };
+}
+
+export function createApplyWhenUnrelatedFrameGroup(applicator: EntityTransitionApplicator): EntityTransitionApplicator {
+  return function (e, o, v) {
+    return !o.state.value.frameGroupId.startsWith(v.frameGroupId)
+      ? applicator(e, o, v)
+      : TransitionResult.Continue;
+  };
+}
+
+export const applyFrameAnimated = createApplyWhenFrameCompleted(function () {
+  return TransitionResult.TransitionAndContinue;
 });
 
 export async function importEntityStatesFromAnimatedGif(
@@ -152,7 +167,6 @@ export async function importEntityStatesFromAnimatedGif(
   return function (
     parentStateBuilder: EntityStateBuilder,
     groups: AnimationFrameGroup[],
-
   ) {
     return groups.map(function ({
       id,
@@ -174,12 +188,13 @@ export async function importEntityStatesFromAnimatedGif(
             function ({
               index,
               ticks: maybeTicks,
-            }) {
+            }, frameIndex) {
               const originalCanvas = canvases[index];
               const canvas = transformCanvas(originalCanvas, animationOrientationState.value.orientation);
               const frame = frames[index];
               const ticks = maybeTicks ?? Math.ceil(frame.delay / 100);
               return animationOrientationState.createChild({
+                name: `${animationOrientationState.value.name}-${frameIndex}`,
                 canvas,
                 ticks,
               });
@@ -194,7 +209,7 @@ export async function importEntityStatesFromAnimatedGif(
                 state.addTransition(
                   next,
                   applyFrameAnimated,
-                  0,
+                  2,
                 );
               }
             },

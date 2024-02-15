@@ -1,5 +1,8 @@
 import { StateMachine } from 'base/state/machine';
-import { type State } from 'base/state/types';
+import {
+  type State,
+  type TransitionApplicator,
+} from 'base/state/types';
 
 export const enum OrientationType {
   Omnidirectional,
@@ -8,9 +11,15 @@ export const enum OrientationType {
 }
 
 export const enum LateralDirection {
-  Right = 0,
-  Left = 1,
+  Right = 1,
+  Left,
 }
+
+export const enum LateralInputNeutral {
+  Neutral = 0,
+}
+
+export type LateralInput = LateralInputNeutral | LateralDirection;
 
 export const enum CardinalDirection {
   East = 0,
@@ -65,92 +74,30 @@ export const OrientationCardinalWest: Orientation = {
 };
 
 export const enum EntityTransitionType {
-  FrameAnimated,
-  MoveLateral,
-  MoveLower,
-  HaltLateral,
-  Fall,
-  Jump,
-  Land,
+  Update = 1,
+  Collision,
 }
 
-export type EntityTransitionFrameAnimated = {
-  type: EntityTransitionType.FrameAnimated,
-};
+export type EntityTransitionUpdate = {
+  type: EntityTransitionType.Update,
+  frameComplete: boolean,
+} & ({
+  player: true,
+  lateral: LateralInput,
+  down: boolean,
+  jump: boolean,
+} | {
+  player: false,
+});
 
-export type EntityTransitionMoveLateral = {
-  type: EntityTransitionType.MoveLateral,
-  direction: LateralDirection,
-};
-
-export type EntityTransitionHaltLateral = {
-  type: EntityTransitionType.HaltLateral,
-};
-
-export type EntityTransitionJump = {
-  type: EntityTransitionType.Jump,
-};
-
-export const enum MoveLowerIntensity {
-  None = 1,
-  Duck,
-  Fall,
-}
-
-export type EntityTransitionMoveLower = {
-  type: EntityTransitionType.MoveLower,
-  intensity: MoveLowerIntensity,
-};
-
-export type EntityTransitionFall = {
-  type: EntityTransitionType.Fall,
-};
-
-export type EntityTransitionLand = {
-  type: EntityTransitionType.Land,
-};
-
-export const EntityTransitionFrameAnimated: EntityTransitionFrameAnimated = {
-  type: EntityTransitionType.FrameAnimated,
-};
-
-export const EntityTransitionHaltLateral: EntityTransitionHaltLateral = {
-  type: EntityTransitionType.HaltLateral,
-};
-
-export const EntityTransitionMoveLateralRight: EntityTransitionMoveLateral = {
-  type: EntityTransitionType.MoveLateral,
-  direction: LateralDirection.Right,
-};
-
-export const EntityTransitionMoveLateralLeft: EntityTransitionMoveLateral = {
-  type: EntityTransitionType.MoveLateral,
-  direction: LateralDirection.Left,
-};
-
-export const EntityTransitionMoveLowerNone: EntityTransitionMoveLower = {
-  type: EntityTransitionType.MoveLower,
-  intensity: MoveLowerIntensity.None,
-};
-
-export const EntityTransitionMoveLowerDuck: EntityTransitionMoveLower = {
-  type: EntityTransitionType.MoveLower,
-  intensity: MoveLowerIntensity.Duck,
-};
-
-export const EntityTransitionMoveLowerFall: EntityTransitionMoveLower = {
-  type: EntityTransitionType.MoveLower,
-  intensity: MoveLowerIntensity.Fall,
+export type EntityTransitionCollision = {
+  // TODO
+  type: EntityTransitionType.Collision,
 };
 
 export type EntityTransition =
-  | EntityTransitionFrameAnimated
-  | EntityTransitionMoveLateral
-  | EntityTransitionMoveLower
-  | EntityTransitionHaltLateral
-  | EntityTransitionJump
-  | EntityTransitionFall
-  | EntityTransitionLand
+  | EntityTransitionUpdate
+  | EntityTransitionCollision
   ;
 
 export type EntityStateValue = {
@@ -164,26 +111,15 @@ export type EntityStateValue = {
 
 export type EntityState = State<EntityStateValue, EntityTransition, Entity>;
 export class EntityStateMachine extends StateMachine<EntityStateValue, EntityTransition, Entity> {
-  constructor(initialState: EntityState) {
-    super(
-      initialState,
-      function (e, s1, s2) {
-        // can transition to same frame group with animations
-        return e !== EntityTransitionFrameAnimated
-          // but can't transition to same frame group and orientation otherwise
-          && s1.value.frameGroupId === s2.value.frameGroupId
-          && s1.value.orientation === s2.value.orientation
-          // no point in transitioning to self however
-          || s1 === s2;
-      },
-    );
-  }
-  protected override beforeTransition(_event: EntityTransition, to: EntityStateValue, owner: Entity): void {
+  protected override beforeTransition(_event: EntityTransition, owner: Entity, to: EntityStateValue): void {
     owner.ticksRemaining = to.ticks;
+    console.log(_event, this.value.name, to.name, to.ticks);
   }
 }
 
+export type EntityTransitionApplicator = TransitionApplicator<EntityStateValue, EntityTransition, Entity>;
+
 export type Entity = {
   ticksRemaining: number,
-  state: EntityStateMachine,
+  state: StateMachine<EntityStateValue, EntityTransition, Entity>,
 };

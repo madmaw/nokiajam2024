@@ -10,12 +10,10 @@ import {
 } from 'base/metrics';
 import {
   type Entity,
-  EntityTransitionFrameAnimated,
-  EntityTransitionHaltLateral,
-  EntityTransitionMoveLateralLeft,
-  EntityTransitionMoveLateralRight,
-  EntityTransitionMoveLowerDuck,
-  EntityTransitionMoveLowerNone,
+  type EntityTransition,
+  EntityTransitionType,
+  LateralDirection,
+  LateralInputNeutral,
 } from 'model/entity';
 import {
   useCallback,
@@ -53,29 +51,33 @@ export function TestState({
     thenRef.current = now;
     handleRef.current = requestAnimationFrame(update);
     drawRef.current += diff;
+    const firstRender = now === 0;
     const draw = drawRef.current > millisecondsPerRender || now === 0;
     const right = readKeyState(keyStates, InputAction.Right);
     const left = readKeyState(keyStates, InputAction.Left);
+    const lateral = left && right || !left && !right
+      ? LateralInputNeutral.Neutral
+      : left
+        ? LateralDirection.Left
+        : LateralDirection.Right;
     const down = readKeyState(keyStates, InputAction.Down);
 
-    if (diff > 0 && draw) {
+    if (!firstRender && draw) {
       entity.ticksRemaining = Math.max(0, entity.ticksRemaining - 1);
-      if (entity.ticksRemaining === 0) {
-        entity.state.handleEvent(EntityTransitionFrameAnimated, entity);
-      }
     }
 
-    const moveLowerEvent = down
-      ? EntityTransitionMoveLowerDuck
-      : EntityTransitionMoveLowerNone;
-    entity.state.handleEvent(moveLowerEvent, entity);
+    const frameComplete = entity.ticksRemaining === 0;
 
-    const lateralMovementEvent = left && !right || right && !left
-      ? left
-        ? EntityTransitionMoveLateralLeft
-        : EntityTransitionMoveLateralRight
-      : EntityTransitionHaltLateral;
-    entity.state.handleEvent(lateralMovementEvent, entity);
+    const transition: EntityTransition = {
+      type: EntityTransitionType.Update,
+      player: true,
+      frameComplete,
+      down,
+      jump: false,
+      lateral,
+    };
+    entity.state.handleEvent(transition, entity);
+
     const canvas = canvasRef.current;
     if (canvas == null) {
       return;

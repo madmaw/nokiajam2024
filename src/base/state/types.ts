@@ -1,14 +1,15 @@
 export const enum TransitionResult {
-  Transition = 1,
+  TransitionAndAbort = 1,
+  TransitionAndContinue,
   Abort,
-  TryNext,
+  Continue,
 }
 
-export type TransitionApplicator<E, O> = (event: E, owner: O) => TransitionResult;
+export type TransitionApplicator<V, E, O> = (event: E, owner: O, targetValue: V) => TransitionResult;
 
 export type Transition<V, E, O> = {
   readonly state: State<V, E, O>,
-  readonly apply: TransitionApplicator<E, O>,
+  readonly apply: TransitionApplicator<V, E, O>,
 }
 
 export type State<V, E, O> = {

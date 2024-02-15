@@ -16,7 +16,8 @@ import {
   type EntityTransition,
   EntityTransitionType,
   LateralDirection,
-  MoveLowerIntensity,
+  LateralInputNeutral,
+  type Orientation,
   OrientationLateralLeft,
   OrientationLateralRight,
   OrientationType,
@@ -24,7 +25,9 @@ import {
 import {
   type AnimationFrameGroup,
   applyFrameAnimated,
+  createApplyWhenDifferentFrameGroup,
   createApplyWhenFrameCompleted,
+  createApplyWhenUnrelatedFrameGroup,
   importEntityStatesFromAnimatedGif,
   orientationGroupAttributes,
 } from 'model/import';
@@ -35,6 +38,7 @@ import {
 } from 'react';
 import {
   type Input,
+  InputAction,
   InputProgress,
 } from 'ui/input';
 import { Loading } from 'ui/loading';
@@ -52,10 +56,39 @@ const ninjaIdleAnimationFrameGroup: AnimationFrameGroup = {
   wrapAnimation: true,
   animationFrames: [
     {
-      index: 7,
+      index: 8,
+    },
+    {
+      index: 9,
+    },
+    {
+      index: 10,
+    },
+    {
+      index: 9,
     },
     {
       index: 8,
+    },
+    {
+      index: 7,
+    },
+  ],
+};
+
+const ninjaIdleBlinkAnimationFrameGroup: AnimationFrameGroup = {
+  id: 'idle-blink',
+  orientationType: OrientationType.Lateral,
+  wrapAnimation: false,
+  animationFrames: [
+    {
+      index: 11,
+    },
+    {
+      index: 12,
+    },
+    {
+      index: 11,
     },
   ],
 };
@@ -66,16 +99,16 @@ const ninjaWalkAnimationFrameGroup: AnimationFrameGroup = {
   wrapAnimation: true,
   animationFrames: [
     {
-      index: 13,
+      index: 21,
     },
     {
-      index: 14,
+      index: 22,
     },
     {
-      index: 15,
+      index: 23,
     },
     {
-      index: 16,
+      index: 24,
     },
   ],
 };
@@ -86,13 +119,13 @@ const ninjaTurnAnimationFrameGroup: AnimationFrameGroup = {
   wrapAnimation: false,
   animationFrames: [
     {
-      index: 29,
+      index: 37,
     },
     {
-      index: 30,
+      index: 38,
     },
     {
-      index: 31,
+      index: 39,
     },
   ],
 };
@@ -145,58 +178,82 @@ const ninjaDuckAnimationFrameGroup: AnimationFrameGroup = {
   ],
 };
 
-function applyWalkLeft(e: EntityTransition): TransitionResult {
-  if (e.type === EntityTransitionType.MoveLateral && e.direction === LateralDirection.Left) {
+function applyPlayerWalk(e: EntityTransition, _: Entity, attributeValues: Record<'orientation', Orientation>): TransitionResult {
+  const { orientation } = attributeValues;
+  if (
+    e.type === EntityTransitionType.Update
+    && e.player
+    && orientation.type === OrientationType.Lateral
+    && e.lateral === orientation.direction
+  ) {
     // TODO set velocity
-    return TransitionResult.Transition;
+    return TransitionResult.TransitionAndAbort;
   }
-  return TransitionResult.TryNext;
+  return TransitionResult.Continue;
 }
 
-function applyWalkRight(e: EntityTransition): TransitionResult {
-  if (e.type === EntityTransitionType.MoveLateral && e.direction === LateralDirection.Right) {
+function applyPlayerTurnLeft(e: EntityTransition, owner: Entity) {
+  if (
+    e.type === EntityTransitionType.Update
+    && e.player
+    && e.lateral === LateralDirection.Left
+    && owner.state.value.orientation === OrientationLateralRight
+  ) {
     // TODO set velocity
-    return TransitionResult.Transition;
+    return TransitionResult.TransitionAndAbort;
   }
-  return TransitionResult.TryNext;
+  return TransitionResult.Continue;
 }
 
-function applyTurnLeft(e: EntityTransition, owner: Entity) {
-  if (e.type === EntityTransitionType.MoveLateral && e.direction === LateralDirection.Left && owner.state.value.orientation === OrientationLateralRight) {
+function applyPlayerTurnRight(e: EntityTransition, owner: Entity) {
+  if (
+    e.type === EntityTransitionType.Update
+    && e.player
+    && e.lateral === LateralDirection.Right
+    && owner.state.value.orientation === OrientationLateralLeft
+  ) {
     // TODO set velocity
-    return TransitionResult.Transition;
+    return TransitionResult.TransitionAndAbort;
   }
-  return TransitionResult.TryNext;
+  return TransitionResult.Continue;
 }
 
-function applyTurnRight(e: EntityTransition, owner: Entity) {
-  if (e.type === EntityTransitionType.MoveLateral && e.direction === LateralDirection.Right && owner.state.value.orientation === OrientationLateralLeft) {
-    // TODO set velocity
-    return TransitionResult.Transition;
+function applyPlayerIdle(e: EntityTransition) {
+  if (
+    e.type === EntityTransitionType.Update
+    && e.player
+    && e.lateral === LateralInputNeutral.Neutral
+  ) {
+    // TODO set velocity? (continue is problematic for this, so maybe let friction do it)
+    return TransitionResult.TransitionAndContinue;
   }
-  return TransitionResult.TryNext;
+  return TransitionResult.Continue;
 }
 
-function applyIdle(e: EntityTransition) {
-  if (e.type === EntityTransitionType.HaltLateral) {
-    // TODO set velocity
-    return TransitionResult.Transition;
+function applyPlayerDuck(e: EntityTransition) {
+  if (
+    e.type === EntityTransitionType.Update
+    && e.player
+    && e.down
+  ) {
+    return TransitionResult.TransitionAndAbort;
   }
-  return TransitionResult.TryNext;
-}
-
-function applyDuck(e: EntityTransition) {
-  if (e.type === EntityTransitionType.MoveLower && e.intensity === MoveLowerIntensity.Duck) {
-    return TransitionResult.Transition;
-  }
-  return TransitionResult.TryNext;
+  return TransitionResult.Continue;
 }
 
 function applyStand(e: EntityTransition) {
-  if (e.type === EntityTransitionType.MoveLower && e.intensity === MoveLowerIntensity.None) {
-    return TransitionResult.Transition;
+  if (
+    e.type === EntityTransitionType.Update
+    && e.player
+    && !e.down
+  ) {
+    return TransitionResult.TransitionAndAbort;
   }
-  return TransitionResult.TryNext;
+  return TransitionResult.Continue;
+}
+
+function applyInfrequently() {
+  return Math.random() < .01 ? TransitionResult.TransitionAndContinue : TransitionResult.Continue;
 }
 
 async function importNinjaStateMachine(): Promise<EntityStateMachine> {
@@ -208,13 +265,16 @@ async function importNinjaStateMachine(): Promise<EntityStateMachine> {
   const [
     idleState,
     walkState,
+    idleBlinkState,
   ] = ninjaImporter(
     walkableState,
     [
       ninjaIdleAnimationFrameGroup,
       ninjaWalkAnimationFrameGroup,
+      ninjaIdleBlinkAnimationFrameGroup,
     ],
   );
+
   const [
     turnState,
     duckingState,
@@ -230,45 +290,44 @@ async function importNinjaStateMachine(): Promise<EntityStateMachine> {
     ],
   );
 
-  const [
-    walkRightState,
-    walkLeftState,
-  ] = walkState.knownChildren;
-
   // note: intentionally backward to flip the orientation (animations are backward to compensate too)
   const [
     turnLeftToRightState,
     turnRightToLeftState,
-  ] = turnState.knownChildren;
+  ] = turnState.children;
 
   walkableState
-      .addTransition(turnRightToLeftState, applyTurnLeft)
-      .addTransition(turnLeftToRightState, applyTurnRight)
-      .addTransition(walkRightState, applyWalkRight)
-      .addTransition(walkLeftState, applyWalkLeft)
-      .addTransitionAcrossAttributes(idleState, applyIdle, orientationGroupAttributes)
-      .addTransitionAcrossAttributes(duckingState, applyDuck, orientationGroupAttributes);
+      .addTransition(turnRightToLeftState, applyPlayerTurnLeft)
+      .addTransition(turnLeftToRightState, applyPlayerTurnRight)
+      .addTransitionAcrossAttributes(walkState, createApplyWhenDifferentFrameGroup(applyPlayerWalk), orientationGroupAttributes)
+      .addTransitionAcrossAttributes(idleState, createApplyWhenUnrelatedFrameGroup(applyPlayerIdle), orientationGroupAttributes)
+      .addTransitionAcrossAttributes(duckingState, applyPlayerDuck, orientationGroupAttributes);
 
   duckingState
       // wait for the animation to finish, then duck
-      .addTransitionAcrossAttributes(duckState, createApplyWhenFrameCompleted(applyDuck), orientationGroupAttributes)
+      .addTransitionAcrossAttributes(duckState, createApplyWhenFrameCompleted(applyPlayerDuck), orientationGroupAttributes)
       // stand immediately at any point
-      .addTransitionAcrossAttributes(walkableState, applyStand, orientationGroupAttributes);
+      .addTransitionAcrossAttributes(idleState, applyStand, orientationGroupAttributes);
 
   standingState
       // wait for animation to finish, then stand
-      .addTransitionAcrossAttributes(walkableState, createApplyWhenFrameCompleted(applyStand), orientationGroupAttributes)
-      // can duck immediately
-      .addTransitionAcrossAttributes(duckingState, applyDuck, orientationGroupAttributes);
+      .addTransitionAcrossAttributes(idleState, createApplyWhenFrameCompleted(applyStand), orientationGroupAttributes)
+      // can re-duck immediately
+      .addTransitionAcrossAttributes(duckingState, applyPlayerDuck, orientationGroupAttributes);
 
   duckState
       .addTransitionAcrossAttributes(standingState, applyStand, orientationGroupAttributes);
 
-  ninjaState
-      // revert to idle state when any animation runs out
-      .addTransitionAcrossAttributes(walkableState, applyFrameAnimated, orientationGroupAttributes, -1);
+  idleState
+      .addTransitionAcrossAttributes(idleBlinkState, createApplyWhenFrameCompleted(applyInfrequently), orientationGroupAttributes);
 
-  const [initialState] = ninjaState.flatten();
+  ninjaState
+      // fallback to idle state when any animation runs out
+      .addTransitionAcrossAttributes(idleState, createApplyWhenDifferentFrameGroup(applyFrameAnimated), orientationGroupAttributes, 3);
+
+  const states = ninjaState.flatten();
+  console.log(states);
+  const [initialState] = states;
   return new EntityStateMachine(
     initialState,
   );
@@ -290,6 +349,7 @@ export function install({
   function AnimationScreen({
     value,
     input,
+    requestPop,
   }: { value: EntityStateMachine } & ScreenComponentProps) {
     const keyStatesRef = useRef(createKeyStates());
     useEffect(function () {
@@ -306,13 +366,19 @@ export function install({
             unsetKeyState(keyStates, input.action);
             break;
           case InputProgress.Commit:
+            if (input.action === InputAction.Back) {
+              requestPop?.();
+            }
             break;
           default:
             throw new UnreachableError(input.progress);
         }
       });
       return subscription.unsubscribe.bind(subscription);
-    }, [input]);
+    }, [
+      input,
+      requestPop,
+    ]);
 
     const entity = useMemo<Entity>(function () {
       return {
