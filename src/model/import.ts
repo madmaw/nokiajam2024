@@ -140,8 +140,17 @@ export function createApplyWhenUnrelatedFrameGroup(applicator: EntityTransitionA
   };
 }
 
-export const applyFrameAnimated = createApplyWhenFrameCompleted(function () {
-  return TransitionResult.TransitionAndContinue;
+export function createApplyOnFrameIndex(applicator: EntityTransitionApplicator, ...frameIndices: number[]): EntityTransitionApplicator {
+  const frameIndexSet = new Set(frameIndices);
+  return function (e, o, v) {
+    return frameIndexSet.has(o.state.value.frameIndex)
+      ? applicator(e, o, v)
+      : TransitionResult.Continue;
+  };
+}
+
+export const applyAlways = createApplyWhenFrameCompleted(function () {
+  return TransitionResult.TransitionAndAbort;
 });
 
 export async function importEntityStatesFromAnimatedGif(
@@ -197,6 +206,7 @@ export async function importEntityStatesFromAnimatedGif(
                 name: `${animationOrientationState.value.name}-${frameIndex}`,
                 canvas,
                 ticks,
+                frameIndex,
               });
             },
           );
@@ -208,8 +218,8 @@ export async function importEntityStatesFromAnimatedGif(
               if (index < orientationAnimationStateBuilders.length - 1 || wrapAnimation) {
                 state.addTransition(
                   next,
-                  applyFrameAnimated,
-                  2,
+                  applyAlways,
+                  0,
                 );
               }
             },

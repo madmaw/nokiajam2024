@@ -13,6 +13,7 @@ const requiredKeys: DefinedKeys<EntityStateValue> = {
   orientation: true,
   ticks: true,
   frameGroupId: true,
+  frameIndex: true,
 };
 
 export class EntityStateBuilder extends StateBuilder<EntityStateValue, EntityTransition, Entity> {

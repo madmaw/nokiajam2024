@@ -107,6 +107,7 @@ export type EntityStateValue = {
   // avoid obfuscation so we can reference this by name
   readonly ['orientation']: Orientation,
   readonly frameGroupId: string,
+  readonly ['frameIndex']: number,
 };
 
 export type EntityState = State<EntityStateValue, EntityTransition, Entity>;

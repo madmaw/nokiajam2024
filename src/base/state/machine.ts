@@ -23,7 +23,7 @@ export abstract class StateMachine<V, E, O> {
         .reduce<[State<V, E, O>, boolean]>(
           (
             [
-              maybeCurrentState,
+              nextState,
               aborted,
             ],
             {
@@ -33,7 +33,7 @@ export abstract class StateMachine<V, E, O> {
           ) => {
             if (aborted) {
               return [
-                maybeCurrentState,
+                nextState,
                 true,
               ];
             }
@@ -44,19 +44,9 @@ export abstract class StateMachine<V, E, O> {
                   state,
                   true,
                 ];
-              case TransitionResult.TransitionAndContinue:
-                return [
-                  state,
-                  false,
-                ];
-              case TransitionResult.Abort:
-                return [
-                  maybeCurrentState,
-                  true,
-                ];
               case TransitionResult.Continue:
                 return [
-                  maybeCurrentState,
+                  nextState,
                   false,
                 ];
               default:

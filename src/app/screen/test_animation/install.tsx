@@ -24,7 +24,8 @@ import {
 } from 'model/entity';
 import {
   type AnimationFrameGroup,
-  applyFrameAnimated,
+  applyAlways,
+  createApplyOnFrameIndex,
   createApplyWhenDifferentFrameGroup,
   createApplyWhenFrameCompleted,
   createApplyWhenUnrelatedFrameGroup,
@@ -75,6 +76,7 @@ const ninjaIdleAnimationFrameGroup: AnimationFrameGroup = {
         2,
         8,
         16,
+        32,
       ],
     },
     {
@@ -244,8 +246,8 @@ function applyPlayerIdle(e: EntityTransition) {
     && e.player
     && e.lateral === LateralInputNeutral.Neutral
   ) {
-    // TODO set velocity? (continue is problematic for this, so maybe let friction do it)
-    return TransitionResult.TransitionAndContinue;
+    // TODO set velocity?
+    return TransitionResult.TransitionAndAbort;
   }
   return TransitionResult.Continue;
 }
@@ -272,8 +274,10 @@ function applyStand(e: EntityTransition) {
   return TransitionResult.Continue;
 }
 
-function applyInfrequently() {
-  return Math.random() < .1 ? TransitionResult.TransitionAndContinue : TransitionResult.Continue;
+function createApplyRandomly(fraction: number) {
+  return function () {
+    return Math.random() < fraction ? TransitionResult.TransitionAndAbort : TransitionResult.Continue;
+  };
 }
 
 async function importNinjaStateMachine(): Promise<EntityStateMachine> {
@@ -339,11 +343,11 @@ async function importNinjaStateMachine(): Promise<EntityStateMachine> {
       .addTransitionAcrossAttributes(standingState, applyStand, orientationGroupAttributes);
 
   idleState
-      .addTransitionAcrossAttributes(idleBlinkState, createApplyWhenFrameCompleted(applyInfrequently), orientationGroupAttributes);
+      .addTransitionAcrossAttributes(idleBlinkState, createApplyWhenFrameCompleted(createApplyOnFrameIndex(createApplyRandomly(.1), 3, 4)), orientationGroupAttributes);
 
   ninjaState
       // fallback to idle state when any animation runs out
-      .addTransitionAcrossAttributes(idleState, createApplyWhenDifferentFrameGroup(applyFrameAnimated), orientationGroupAttributes, 3);
+      .addTransitionAcrossAttributes(idleState, createApplyWhenDifferentFrameGroup(applyAlways), orientationGroupAttributes, -1);
 
   const states = ninjaState.flatten();
   console.log(states);

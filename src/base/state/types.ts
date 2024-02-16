@@ -1,7 +1,5 @@
 export const enum TransitionResult {
   TransitionAndAbort = 1,
-  TransitionAndContinue,
-  Abort,
   Continue,
 }
 
