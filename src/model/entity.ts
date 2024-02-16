@@ -103,7 +103,7 @@ export type EntityTransition =
 export type EntityStateValue = {
   readonly name: string,
   readonly canvas: HTMLCanvasElement | OffscreenCanvas,
-  readonly ticks: number,
+  readonly ticks: number[],
   // avoid obfuscation so we can reference this by name
   readonly ['orientation']: Orientation,
   readonly frameGroupId: string,
@@ -112,7 +112,7 @@ export type EntityStateValue = {
 export type EntityState = State<EntityStateValue, EntityTransition, Entity>;
 export class EntityStateMachine extends StateMachine<EntityStateValue, EntityTransition, Entity> {
   protected override beforeTransition(_event: EntityTransition, owner: Entity, to: EntityStateValue): void {
-    owner.ticksRemaining = to.ticks;
+    owner.ticksRemaining = to.ticks[Math.random() * to.ticks.length | 0];
     console.log(_event, this.value.name, to.name, to.ticks);
   }
 }

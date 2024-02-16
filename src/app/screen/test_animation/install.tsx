@@ -56,22 +56,32 @@ const ninjaIdleAnimationFrameGroup: AnimationFrameGroup = {
   wrapAnimation: true,
   animationFrames: [
     {
-      index: 8,
-    },
-    {
       index: 9,
-    },
-    {
-      index: 10,
-    },
-    {
-      index: 9,
+      ticks: [
+        2,
+        8,
+        16,
+      ],
     },
     {
       index: 8,
     },
     {
       index: 7,
+    },
+    {
+      index: 8,
+      ticks: [
+        2,
+        8,
+        16,
+      ],
+    },
+    {
+      index: 9,
+    },
+    {
+      index: 10,
     },
   ],
 };
@@ -83,12 +93,22 @@ const ninjaIdleBlinkAnimationFrameGroup: AnimationFrameGroup = {
   animationFrames: [
     {
       index: 11,
+      ticks: [
+        5,
+        10,
+        20,
+      ],
     },
     {
       index: 12,
     },
     {
       index: 11,
+      ticks: [
+        5,
+        10,
+        20,
+      ],
     },
   ],
 };
@@ -99,16 +119,16 @@ const ninjaWalkAnimationFrameGroup: AnimationFrameGroup = {
   wrapAnimation: true,
   animationFrames: [
     {
-      index: 21,
-    },
-    {
-      index: 22,
-    },
-    {
       index: 23,
     },
     {
       index: 24,
+    },
+    {
+      index: 21,
+    },
+    {
+      index: 22,
     },
   ],
 };
@@ -136,11 +156,11 @@ const ninjaJumpAnimationFrameGroup: AnimationFrameGroup = {
   wrapAnimation: false,
   animationFrames: [
     {
-      index: 10,
+      index: 18,
     },
     // fall
     {
-      index: 11,
+      index: 19,
     },
   ],
 };
@@ -253,7 +273,7 @@ function applyStand(e: EntityTransition) {
 }
 
 function applyInfrequently() {
-  return Math.random() < .01 ? TransitionResult.TransitionAndContinue : TransitionResult.Continue;
+  return Math.random() < .1 ? TransitionResult.TransitionAndContinue : TransitionResult.Continue;
 }
 
 async function importNinjaStateMachine(): Promise<EntityStateMachine> {

@@ -36,7 +36,7 @@ export type AnimationFrameGroup = {
 
 export type AnimationFrame = {
   readonly index: number,
-  readonly ticks?: number,
+  readonly ticks?: number[],
 };
 
 // useful for clients attribute transitions across orientation groups
@@ -192,7 +192,7 @@ export async function importEntityStatesFromAnimatedGif(
               const originalCanvas = canvases[index];
               const canvas = transformCanvas(originalCanvas, animationOrientationState.value.orientation);
               const frame = frames[index];
-              const ticks = maybeTicks ?? Math.ceil(frame.delay / 100);
+              const ticks = maybeTicks ?? [Math.ceil(frame.delay / 100)];
               return animationOrientationState.createChild({
                 name: `${animationOrientationState.value.name}-${frameIndex}`,
                 canvas,
