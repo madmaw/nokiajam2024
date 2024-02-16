@@ -16,8 +16,10 @@ import { Skeleton } from './skeleton';
 
 export function install({
   settings,
+  DebugOverlay,
 }: {
   readonly settings: Settings,
+  readonly DebugOverlay: React.ComponentType,
 }): {
   contentController: ContentController,
   overlayController: OverlayController,
@@ -31,11 +33,20 @@ export function install({
         foreground,
         background,
         backlit,
+        blur,
+        ghosting,
+        shadows,
+        scanlines,
       } = settings;
       return {
         foreground,
         background,
         backlit,
+        blur,
+        ghosting,
+        shadows,
+        scanlines,
+        DebugOverlay,
       };
     },
   );
@@ -54,13 +65,17 @@ export function install({
     const { screens } = contentHolder;
     return (
       <SkeletonWithTheme>
-        <GhostOverlay forceUpdateContainer={maybeOverlayController}>
+        <GhostOverlay
+          forceUpdateContainer={maybeOverlayController}
+          enabled={settings.ghosting}
+        >
           <Stack
             screens={screens}
             requestPop={requestPop}
             input={input}
             output={output}
           />
+
         </GhostOverlay>
       </SkeletonWithTheme>
     );

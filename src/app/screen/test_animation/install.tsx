@@ -37,6 +37,7 @@ import {
   useMemo,
   useRef,
 } from 'react';
+import { type FrameCounter } from 'ui/debug/types';
 import {
   type Input,
   InputAction,
@@ -361,8 +362,10 @@ const EntityStateLoading = Loading<EntityState, ScreenComponentProps>;
 
 export function install({
   overlayController,
+  frameCounter,
 }: {
   overlayController: OverlayController
+  frameCounter: FrameCounter,
 }): {
   AnimationScreen: ScreenComponent,
   loadingPromise: Promise<void>,
@@ -415,6 +418,7 @@ export function install({
         entity={entity}
         onFrame={overlayController.forceUpdate}
         keyStates={keyStatesRef.current}
+        frameCounter={frameCounter}
       />
     );
   }

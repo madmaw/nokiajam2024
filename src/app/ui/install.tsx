@@ -14,6 +14,7 @@ export function install(params: { settings: Settings }) {
     TextBody,
     TextDetail,
     TextLarge,
+    TextDebug,
   } = installTypography(params);
   const { Button } = installButton({ Text: TextBody });
   const {
@@ -25,7 +26,8 @@ export function install(params: { settings: Settings }) {
     CheckIcon: TickIcon,
   });
   return {
-    Text: TextBody,
+    TextBody,
+    TextDebug,
     Button,
     TextMenu,
     iconPromise,

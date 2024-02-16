@@ -8,6 +8,7 @@ import {
   screenHeight,
   screenWidth,
 } from 'base/metrics';
+import { runInAction } from 'mobx';
 import {
   type Entity,
   type EntityTransition,
@@ -20,12 +21,14 @@ import {
   useEffect,
   useRef,
 } from 'react';
+import { type FrameCounter } from 'ui/debug/types';
 import { InputAction } from 'ui/input';
 
 type TestStateProps = {
   entity: Entity,
   onFrame: (canvas: HTMLCanvasElement) => void,
   keyStates: KeyStates,
+  frameCounter: FrameCounter,
 };
 
 const TestCanvas = styled.canvas`
@@ -40,6 +43,7 @@ export function TestState({
   entity,
   onFrame,
   keyStates,
+  frameCounter,
 }: TestStateProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const handleRef = useRef<number | null>(null);
@@ -96,21 +100,32 @@ export function TestState({
       onFrame(canvas);
       drawRef.current = Math.max(0, Math.min(millisecondsPerRender, drawRef.current - millisecondsPerRender));
     }
+    frameCounter.addUpdate(now, draw);
   }, [
     onFrame,
     entity,
     keyStates,
+    frameCounter,
   ]);
 
   useEffect(function () {
     handleRef.current = requestAnimationFrame(update);
+    runInAction(function () {
+      frameCounter.updating = true;
+    });
     return function () {
       const handle = handleRef.current;
+      runInAction(function () {
+        frameCounter.updating = false;
+      });
       if (handle != null) {
         cancelAnimationFrame(handle);
       }
     };
-  }, [update]);
+  }, [
+    update,
+    frameCounter,
+  ]);
 
   return (
     <TestCanvas

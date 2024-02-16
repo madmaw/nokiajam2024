@@ -16,6 +16,7 @@ import {
 
 export type GhostOverlayProps = PropsWithChildren<{
   forceUpdateContainer: { forceUpdate: ((canvas?: HTMLCanvasElement | OffscreenCanvas) => void) | undefined },
+  enabled: boolean,
 }>;
 
 const transparencyFilterName = 'transparency-filter';
@@ -57,6 +58,7 @@ function getAlpha(now: number, then: number) {
 export function GhostOverlay({
   children,
   forceUpdateContainer,
+  enabled,
 }: GhostOverlayProps) {
   const [
     container,
@@ -90,6 +92,11 @@ export function GhostOverlay({
       return;
     }
     cctx.clearRect(0, 0, renderWidth, renderHeight);
+    if (!enabled) {
+      // clear the canvas
+      ctx.clearRect(0, 0, renderWidth, renderHeight);
+      return;
+    }
     const captureCount = ++captureCountRef.current;
     if (screenshot != null) {
       cctx.imageSmoothingEnabled = false;
@@ -115,6 +122,7 @@ export function GhostOverlay({
   }, [
     container,
     captureCanvas,
+    enabled,
   ]);
 
   useEffect(function () {
@@ -125,7 +133,7 @@ export function GhostOverlay({
   ]);
 
   useEffect(function () {
-    if (container == null) {
+    if (container == null || !enabled) {
       return;
     }
     const observer = new MutationObserver(function () {
@@ -143,6 +151,7 @@ export function GhostOverlay({
   }, [
     container,
     captureWithDomToImage,
+    enabled,
   ]);
 
   const then = useRef<number>(0);
@@ -166,13 +175,18 @@ export function GhostOverlay({
   }, [offscreenCanvas]);
 
   useEffect(function () {
-    animate(0);
-    return function () {
-      if (animationFrameHandle.current != null) {
-        cancelAnimationFrame(animationFrameHandle.current);
-      }
-    };
-  }, [animate]);
+    if (enabled) {
+      animate(0);
+      return function () {
+        if (animationFrameHandle.current != null) {
+          cancelAnimationFrame(animationFrameHandle.current);
+        }
+      };
+    }
+  }, [
+    animate,
+    enabled,
+  ]);
   return (
     <Container>
       <svg
@@ -213,11 +227,13 @@ export function GhostOverlay({
       <ChildrenContainer ref={setContainer}>
         {children}
       </ChildrenContainer>
-      <OverlayCanvas
-        ref={canvasRef}
-        width={renderWidth}
-        height={renderHeight}
-      />
+      {enabled && (
+        <OverlayCanvas
+          ref={canvasRef}
+          width={renderWidth}
+          height={renderHeight}
+        />
+      )}
     </Container>
   );
 }

@@ -12,6 +12,7 @@ import { install as installSettings } from './screen/settings/install';
 import { install as installTestAnimation } from './screen/test_animation/install';
 import { install as installSkeleton } from './skeleton/install';
 import { install as installSplashScreen } from './splash/install';
+import { install as installDebug } from './ui/debug/install';
 import { install as installUi } from './ui/install';
 
 const LoadingScreen: typeof Loading<void, ScreenComponentProps> = Loading;
@@ -33,24 +34,35 @@ export function install() {
   } = installInput();
 
   const settings = new Settings(defaultColorScheme, fonts);
-  const {
-    Skeleton,
-    contentController,
-    overlayController,
-  } = installSkeleton({
-    settings,
-  });
 
   const {
     Button,
-    Text,
+    TextDebug,
     TextMenu,
     iconPromise,
   } = installUi({
     settings,
   });
 
+  const {
+    DebugOverlay,
+    frameCounter,
+  } = installDebug({
+    Text: TextDebug,
+    settings,
+  });
+
+  const {
+    Skeleton,
+    contentController,
+    overlayController,
+  } = installSkeleton({
+    settings,
+    DebugOverlay,
+  });
+
   const { AnimationScreen } = installTestAnimation({
+    frameCounter,
     overlayController,
   });
 

@@ -1,4 +1,7 @@
-import { createPartialObserverComponent } from 'base/react/partial';
+import {
+  createPartialComponent,
+  createPartialObserverComponent,
+} from 'base/react/partial';
 import { type Settings } from 'model/settings';
 import { Text } from 'ui/typography/text';
 
@@ -25,10 +28,20 @@ export function install({
       return settings.fonts.large;
     },
   );
+  const TextDebug = createPartialComponent(
+    Text,
+    {
+      fontFamily: 'monospace',
+      fontSize: 12,
+      unscaledFontSize: 12,
+      unscaledLineHeight: 16,
+    },
+  );
 
   return {
     TextBody,
     TextDetail,
     TextLarge,
+    TextDebug,
   };
 }

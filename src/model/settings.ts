@@ -18,6 +18,21 @@ export class Settings {
   @observable.ref
   accessor fonts: Fonts;
 
+  @observable.ref
+  accessor debug = true;
+
+  @observable.ref
+  accessor ghosting = true;
+
+  @observable.ref
+  accessor scanlines = true;
+
+  @observable.ref
+  accessor shadows = true;
+
+  @observable.ref
+  accessor blur = true;
+
   @computed
   get foreground() {
     return this.colorScheme.foreground;

@@ -75,24 +75,33 @@ const ScanLines = styled.div<{ scaleBy: number }>`
   }
 `;
 
-const FilterContainer = styled.div<{ backlit: boolean, scaleBy: number }>`
+const FilterContainer = styled.div<{ backlit: boolean, scaleBy: number, shadows: boolean, blur: boolean }>`
   label: skeleton-filter-container;
   position: absolute;
   transition-property: filter;
   transition-duration: ${transitionDuration};
   filter:
-    blur(${({ scaleBy }) => `${.5 * scaleBy}px`})
+    ${({
+    scaleBy,
+    blur,
+  }) => blur && `blur(${.5 * scaleBy}px)`}
     url(#${filterName})
     ${({
-    backlit, scaleBy,
-  }) => !backlit && `drop-shadow(0 ${1 * scaleBy}px ${2 * scaleBy}px rgba(20, 0, 10, 0.7))`};
+    backlit,
+    scaleBy,
+    shadows,
+  }) => !backlit && shadows && `drop-shadow(0 ${1 * scaleBy}px ${2 * scaleBy}px rgba(20, 0, 10, 0.7))`};
   ${bigScreenMediaQuery} {
     filter:
-      blur(${({ scaleBy }) => `${.6 * scaleBy}px`})
+      ${({
+    scaleBy, blur,
+  }) => blur && `blur(${.6 * scaleBy}px)`}
       url(#${filterName})
       ${({
-    backlit, scaleBy,
-  }) => !backlit && `drop-shadow(0 ${1 * scaleBy}px ${2 * scaleBy}px rgba(20, 0, 10, 0.7))`};
+    backlit,
+    scaleBy,
+    shadows,
+  }) => !backlit && shadows && `drop-shadow(0 ${1 * scaleBy}px ${2 * scaleBy}px rgba(20, 0, 10, 0.7))`};
   }
 `;
 
@@ -122,10 +131,18 @@ export function Skeleton({
   foreground,
   background,
   backlit,
+  DebugOverlay,
+  scanlines,
+  shadows,
+  blur,
 }: PropsWithChildren<{
   readonly foreground: ReadonlyColor,
   readonly background: ReadonlyColor,
   readonly backlit: boolean,
+  readonly DebugOverlay: React.ComponentType,
+  readonly scanlines: boolean,
+  readonly shadows: boolean,
+  readonly blur: boolean,
 }>) {
   const [
     scale,
@@ -193,7 +210,7 @@ export function Skeleton({
             />
             <feColorMatrix
               type='matrix'
-              in={backlit ? 'lightened' : 'opaque'}
+              in={backlit && shadows ? 'lightened' : 'opaque'}
               values={`
                 0 0 0 ${rgb[0]} 0
                 0 0 0 ${rgb[1]} 0
@@ -211,15 +228,20 @@ export function Skeleton({
         <FilterContainer
           backlit={backlit}
           scaleBy={scale}
+          blur={blur}
+          shadows={shadows}
         >
           <Content scaleBy={scale}>
             {children}
           </Content>
-          <ScanLines
-            scaleBy={scale}
-          />
+          {scanlines && (
+            <ScanLines
+              scaleBy={scale}
+            />
+          )}
         </FilterContainer>
         <Overlay />
+        <DebugOverlay />
       </Container>
 
     </>
